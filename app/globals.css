@@ -1,0 +1,291 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+:root {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  height: 100%;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Chat styles */
+.code-block {
+  @apply my-2 rounded overflow-hidden;
+}
+
+.code-header {
+  @apply bg-gray-800 text-white px-3 py-1 text-sm font-mono;
+}
+
+.code-pre {
+  @apply bg-gray-900 text-white p-3 overflow-x-auto;
+}
+
+.code-inline {
+  @apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono;
+}
+
+.blockquote {
+  @apply border-l-4 border-gray-300 pl-4 py-1 my-2 text-gray-600;
+}
+
+.table-container {
+  @apply overflow-x-auto my-2;
+}
+
+.markdown-table {
+  @apply min-w-full border-collapse;
+}
+
+.table-header {
+  @apply bg-gray-100 border px-4 py-2 text-left font-semibold;
+}
+
+.table-cell {
+  @apply border px-4 py-2;
+}
+
+/* Spinner animation */
+.spinner {
+  @apply animate-spin;
+}
+
+.chat-container {
+  @apply flex flex-col h-full;
+}
+
+/* Global styles for react-syntax-highlighter */
+pre {
+  @apply rounded-md overflow-x-auto my-2;
+}
+
+code {
+  @apply text-sm;
+}
+
+
+
+/* Markdown Styles */
+.prose {
+  max-width: none;
+}
+
+.prose pre {
+  margin: 0;
+}
+
+.prose code:not(pre code) {
+  @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 my-2;
+}
+
+.prose table {
+  @apply min-w-full border-collapse my-2;
+}
+
+.prose th {
+  @apply bg-gray-100 border px-3 py-2 text-left font-semibold;
+}
+
+.prose td {
+  @apply border px-3 py-2;
+}
+
+.prose ul {
+  @apply list-disc list-inside my-2 space-y-1;
+}
+
+.prose ol {
+  @apply list-decimal list-inside my-2 space-y-1;
+}
+
+/* Custom scrollbar for code blocks */
+.code-block pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+.code-block pre::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.code-block pre::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.code-block pre::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Smooth transitions */
+.message-bubble {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Custom prose styles */
+/*
+.prose {
+  max-width: none;
+}
+*/
+
+.prose-invert {
+  color: white;
+}
+
+.prose-invert a {
+  color: #bfdbfe;
+}
+
+.prose-invert strong {
+  color: white;
+}
+
+/* Improved code block styling */
+.code-block pre code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  tab-size: 4 !important;
+}
+
+/* Line number styling */
+.code-block pre {
+  counter-reset: line;
+}
+
+.code-block pre code {
+  counter-increment: line;
+}
+
+.code-block pre code:before {
+  content: counter(line);
+  display: inline-block;
+  width: 2rem;
+  margin-right: 1rem;
+  padding-right: 0.5rem;
+  border-right: 1px solid #4b5563;
+  color: #6b7280;
+  text-align: right;
+  user-select: none;
+}
+
+/* Better syntax highlighting colors */
+.code-block .keyword { color: #c678dd; }
+.code-block .function { color: #61afef; }
+.code-block .string { color: #98c379; }
+.code-block .number { color: #d19a66; }
+.code-block .comment { color: #5c6370; font-style: italic; }
+.code-block .class-name { color: #e5c07b; }
+.code-block .operator { color: #56b6c2; }
+
+
+
+/* Perfect table styling */
+.markdown-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.markdown-table th:first-child {
+  border-top-left-radius: 0.75rem;
+}
+
+.markdown-table th:last-child {
+  border-top-right-radius: 0.75rem;
+}
+
+.markdown-table tr:last-child td:first-child {
+  border-bottom-left-radius: 0.75rem;
+}
+
+.markdown-table tr:last-child td:last-child {
+  border-bottom-right-radius: 0.75rem;
+}
+
+/* Ensure proper text alignment and wrapping */
+.markdown-table th,
+.markdown-table td {
+  word-wrap: break-word;
+  vertical-align: top;
+}
+
+.markdown-table th {
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+/* Smooth hover effects */
+.markdown-table tr {
+  transition: all 0.2s ease-in-out;
+}
+
+.markdown-table tr:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
