@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Dynamic Config Test</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #e0f7fa;
+            padding: 2rem;
+        }
+
+        .content {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content">
+        <h1>Dynamic Configuration Test</h1>
+        <p>This page tests the widget's ability to accept custom UI configurations.</p>
+        <p><strong>Expected Result:</strong></p>
+        <ul>
+            <li>Header should be Red (#DC2626).</li>
+            <li>Header Title should be "Custom Bot".</li>
+            <li>Welcome buttons should turn Red on hover.</li>
+        </ul>
+    </div>
+
+    <!-- Widget Embed Code with Custom UI -->
+    <!-- JSON: {"primaryColor": "#DC2626", "headerTitle": "Custom Bot", "headerIconText": "CB"} -->
+    <script src="/widget-loader.js" data-key="Key1" data-id="VALID_WIDGET_ID"
+        data-ui='{"primaryColor": "#DC2626", "headerTitle": "Custom Bot", "headerIconText": "CB"}'>
+        </script>
+</body>
+
+</html>

@@ -38,7 +38,22 @@
     </div>
 
     <!-- Widget Embed Code -->
-    <script src="/widget-loader.js" data-key="Key1" data-id="VALID_WIDGET_ID" data-host=""></script>
+    <!-- 
+        Standard Embed:
+        <script src="/widget-loader.js" data-key="Key1" data-id="VALID_WIDGET_ID" data-host="http://localhost:3000"></script>
+    -->
+
+    <!-- Standard Embed (No Auto-Login) -->
+    <script src="/widget-loader.js" data-key="Key1" data-id="VALID_WIDGET_ID"
+        data-host="http://localhost:4000"></script>
+
+    <!-- 
+        For CMS Auto-Login, add these attributes:
+        data-name="John Doe"
+        data-email="john.doe@example.com"
+        data-tenant-id="tenant-123"
+        data-company-name="Acme Corp"
+    -->
 </body>
 
 </html>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useUI } from '@/context/UIContext';
 
 interface WidgetHeaderProps {
     showNewChat?: boolean;
@@ -10,16 +11,27 @@ interface WidgetHeaderProps {
 export const WidgetHeader: React.FC<WidgetHeaderProps> = ({
     showNewChat = false,
     onNewChat,
-    title = 'Compliance AI Assistant',
-    avatarText = 'RC'
+    title,
+    avatarText
 }) => {
+    const ui = useUI();
+    const displayTitle = title || ui.headerTitle;
+    const displayAvatar = avatarText || ui.headerIconText;
+    const primaryColor = ui.primaryColor || '#2E3B8B';
+
     return (
-        <div className="bg-[#2E3B8B] px-4 py-3 flex items-center justify-between shadow-md shrink-0">
+        <div
+            className="px-4 py-3 flex items-center justify-between shadow-md shrink-0 transition-colors duration-300"
+            style={{ backgroundColor: ui.headerColor || primaryColor }}
+        >
             <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#2E3B8B] font-bold text-xs">
-                    {avatarText}
+                <div
+                    className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-bold text-xs"
+                    style={{ color: primaryColor }}
+                >
+                    {displayAvatar}
                 </div>
-                <span className="text-white font-semibold text-sm">{title}</span>
+                <span className="text-white font-semibold text-sm">{displayTitle}</span>
             </div>
             <div className="flex items-center gap-2">
                 {showNewChat && onNewChat && (

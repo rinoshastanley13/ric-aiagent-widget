@@ -13,6 +13,7 @@ export const ChatAgent: React.FC = () => {
   const { streamMessage, isStreaming, error } = useChatStream();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [hasUserSentMessage, setHasUserSentMessage] = useState(false);
+  const backendSessionIds = useRef<Record<string, string>>({});
 
   const currentConversation = state.currentConversation;
   const [inputValue, setInputValue] = useState('');
@@ -33,16 +34,117 @@ export const ChatAgent: React.FC = () => {
     setInputValue('');
   }, [currentConversation?.id]); // Only reset when conversation ID changes
 
+  // Auto-trigger welcome message when chat first opens (after registration)
+  useEffect(() => {
+    // Only trigger if we have a user, no conversation yet, and haven't sent a message
+    const hasUser = state.user?.email || localStorage.getItem('widget_user');
+    const noConversation = !currentConversation;
+    const noMessages = !hasUserSentMessage;
+
+    if (hasUser && noConversation && noMessages) {
+      const initWelcome = async () => {
+        // Get user email
+        let userEmail = state.user?.email;
+        if (!userEmail) {
+          try {
+            const stored = localStorage.getItem('widget_user');
+            if (stored) userEmail = JSON.parse(stored).email;
+          } catch (e) { }
+        }
+
+        if (!userEmail) return;
+
+        // Create new conversation
+        const conversationId = Date.now().toString();
+        const newConversation = {
+          id: conversationId,
+          title: 'New Chat',
+          createdAt: new Date(),
+          messages: [],
+        };
+        dispatch({ type: 'ADD_CONVERSATION', payload: newConversation });
+
+        // Create assistant message placeholder
+        const assistantMessageId = Date.now().toString() + '-assistant';
+        const initialAssistantMessage: Message = {
+          id: assistantMessageId,
+          content: '',
+          role: 'assistant',
+          timestamp: new Date(),
+          files: [],
+        };
+
+        dispatch({
+          type: 'ADD_MESSAGE',
+          payload: { conversationId: conversationId, message: initialAssistantMessage },
+        });
+
+        // Stream welcome response
+        try {
+          await streamMessage(
+            "Hello",
+            [],
+            (assistantMessage: Message) => {
+              dispatch({
+                type: 'UPDATE_MESSAGE',
+                payload: {
+                  conversationId: conversationId,
+                  messageId: assistantMessageId,
+                  content: assistantMessage.content,
+                  choices: assistantMessage.choices,
+                },
+              });
+            },
+            userEmail,
+            'new',
+            true,
+            (newSessionId: string) => {
+              backendSessionIds.current[conversationId] = newSessionId;
+            },
+            assistantMessageId // Pass the messageId to useChatStream
+          );
+        } catch (e) {
+          console.error("Welcome message failed", e);
+        }
+      };
+
+      const timer = setTimeout(() => {
+        initWelcome();
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+  }, [state.user?.email, currentConversation, hasUserSentMessage, dispatch, streamMessage]);
+
+
   const handleSendMessage = useCallback(async (content: string, files: FileAttachment[] = []) => {
     if (!content.trim()) return;
 
     setHasUserSentMessage(true);
 
+    // Get User Email
+    let userEmail = state.user?.email;
+    if (!userEmail) {
+      // Fallback to local storage if context not yet populated (though page.tsx handles this)
+      try {
+        const stored = localStorage.getItem('widget_user');
+        if (stored) userEmail = JSON.parse(stored).email;
+      } catch (e) { }
+    }
+
+    if (!userEmail) {
+      console.error("No user email found, cannot send message");
+      // Optionally dispatch an error or force registration
+      return;
+    }
+
     let conversationId = currentConversation?.id;
-    
+    let isNewChat = false;
+
     // Create new conversation if none exists
     if (!currentConversation) {
       conversationId = Date.now().toString();
+      isNewChat = true;
       const newConversation = {
         id: conversationId,
         title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
@@ -53,6 +155,9 @@ export const ChatAgent: React.FC = () => {
     } else {
       conversationId = currentConversation.id;
     }
+
+    // Determine Backend Session ID
+    const backendId = backendSessionIds.current[conversationId!] || 'new'; // Use 'new' if not mapped yet
 
     // Add user message
     const userMessage: Message = {
@@ -87,20 +192,30 @@ export const ChatAgent: React.FC = () => {
     // Stream assistant response
     try {
       await streamMessage(
-        content, 
-        files, 
+        content,
+        files,
         (assistantMessage: Message) => {
           // Update the assistant message content as it streams
-          
           dispatch({
             type: 'UPDATE_MESSAGE',
             payload: {
               conversationId: conversationId!,
               messageId: assistantMessageId,
               content: assistantMessage.content,
+              choices: assistantMessage.choices,
             },
           });
-        }
+        },
+        userEmail,
+        backendId,
+        isNewChat,
+        (newSessionId: string) => {
+          // Callback when backend returns session ID
+          if (conversationId) {
+            backendSessionIds.current[conversationId] = newSessionId;
+          }
+        },
+        assistantMessageId // Pass the messageId so useChatStream uses the same ID
       );
     } catch (err) {
       console.error('Error streaming message:', err);
@@ -116,6 +231,26 @@ export const ChatAgent: React.FC = () => {
     }
   }, [currentConversation, dispatch, streamMessage]);
 
+  const handleChoiceSelect = useCallback(async (value: string, messageId: string) => {
+    // Send the selected choice as a user message
+    await handleSendMessage(value);
+
+    // Clear choices from the message to hide buttons
+    if (currentConversation) {
+      const msg = currentConversation.messages.find(m => m.id === messageId);
+      if (msg) {
+        dispatch({
+          type: 'UPDATE_MESSAGE',
+          payload: {
+            conversationId: currentConversation.id,
+            messageId: messageId,
+            content: msg.content,
+          },
+        });
+      }
+    }
+  }, [currentConversation, dispatch, handleSendMessage]);
+
   const handlePromptSelect = useCallback((prompt: PromptTemplate) => {
     console.log('Prompt selected:', prompt);
     // Set the prompt content to ChatInput by calling handleSendMessage
@@ -125,7 +260,7 @@ export const ChatAgent: React.FC = () => {
 
   // Safe check for messages
   const hasMessages = currentConversation?.messages && currentConversation.messages.length > 0;
-  
+
   // Show messages if user has sent a message OR if we have existing messages
   const shouldShowMessages = hasUserSentMessage || hasMessages;
 
@@ -139,13 +274,14 @@ export const ChatAgent: React.FC = () => {
           <div className="max-w-4xl mx-auto py-6 px-4">
             {/* Render all messages */}
             {currentConversation?.messages?.map((message, index) => (
-              <MessageBubble 
+              <MessageBubble
                 key={message.id || index}
                 message={message}
                 isStreaming={isStreaming && message.role === 'assistant' && index === currentConversation.messages.length - 1}
+                onChoiceSelect={(value) => handleChoiceSelect(value, message.id)}
               />
             ))}
-            
+
             <div ref={messagesEndRef} />
           </div>
         )}
@@ -153,12 +289,12 @@ export const ChatAgent: React.FC = () => {
 
       {/* Chat Input */}
       <div className="backdrop-blur-xl border border-white/40 shadow-2xl shadow-blue-300/10 rounded-t-2xl relative">
-          <ChatInput
-            onSendMessage={handleSendMessage}
-            disabled={isStreaming}
-            inputValue={inputValue}
-            onInputChange={setInputValue}
-          />
+        <ChatInput
+          onSendMessage={handleSendMessage}
+          disabled={isStreaming}
+          inputValue={inputValue}
+          onInputChange={setInputValue}
+        />
       </div>
 
       {/* Footer */}

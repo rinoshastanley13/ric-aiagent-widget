@@ -8,7 +8,7 @@ type ChatAction =
   | { type: 'ADD_CONVERSATION'; payload: Conversation }
   | { type: 'SET_CURRENT_CONVERSATION'; payload: Conversation | null }
   | { type: 'ADD_MESSAGE'; payload: { conversationId: string; message: Message } }
-  | { type: 'UPDATE_MESSAGE'; payload: { conversationId: string; messageId: string; content: string } }
+  | { type: 'UPDATE_MESSAGE'; payload: { conversationId: string; messageId: string; content: string; choices?: Array<{ title: string; value: string }> } }
   | { type: 'TOGGLE_SIDEBAR' }
   | { type: 'DELETE_CONVERSATION'; payload: string }
   | { type: 'SHOW_PROMPT_SUGGESTIONS'; payload: boolean }; // Add this
@@ -31,7 +31,7 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
   switch (action.type) {
     case 'SET_USER':
       return { ...state, user: action.payload };
-    
+
     case 'ADD_CONVERSATION':
       return {
         ...state,
@@ -39,10 +39,10 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
         currentConversation: action.payload,
         showPromptSuggestions: true, // Show suggestions when new conversation is added
       };
-    
+
     case 'SET_CURRENT_CONVERSATION':
       return { ...state, currentConversation: action.payload };
-    
+
     case 'ADD_MESSAGE':
       return {
         ...state,
@@ -51,54 +51,54 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
             ? { ...conv, messages: [...conv.messages, action.payload.message] }
             : conv
         ),
-        currentConversation: 
+        currentConversation:
           state.currentConversation?.id === action.payload.conversationId
             ? {
-                ...state.currentConversation,
-                messages: [...state.currentConversation.messages, action.payload.message],
-              }
+              ...state.currentConversation,
+              messages: [...state.currentConversation.messages, action.payload.message],
+            }
             : state.currentConversation,
       };
-    
+
     case 'UPDATE_MESSAGE':
       return {
         ...state,
         conversations: state.conversations.map(conv =>
           conv.id === action.payload.conversationId
             ? {
-                ...conv,
-                messages: conv.messages.map(msg =>
-                  msg.id === action.payload.messageId
-                    ? { ...msg, content: action.payload.content }
-                    : msg
-                ),
-              }
+              ...conv,
+              messages: conv.messages.map(msg =>
+                msg.id === action.payload.messageId
+                  ? { ...msg, content: action.payload.content, ...(action.payload.choices && { choices: action.payload.choices }) }
+                  : msg
+              ),
+            }
             : conv
         ),
-        currentConversation: 
+        currentConversation:
           state.currentConversation?.id === action.payload.conversationId
             ? {
-                ...state.currentConversation,
-                messages: state.currentConversation.messages.map(msg =>
-                  msg.id === action.payload.messageId
-                    ? { ...msg, content: action.payload.content }
-                    : msg
-                ),
-              }
+              ...state.currentConversation,
+              messages: state.currentConversation.messages.map(msg =>
+                msg.id === action.payload.messageId
+                  ? { ...msg, content: action.payload.content, ...(action.payload.choices && { choices: action.payload.choices }) }
+                  : msg
+              ),
+            }
             : state.currentConversation,
       };
-    
+
     case 'TOGGLE_SIDEBAR':
       return { ...state, isSidebarCollapsed: !state.isSidebarCollapsed };
-    
+
     case 'DELETE_CONVERSATION':
       return {
         ...state,
         conversations: state.conversations.filter(conv => conv.id !== action.payload),
-        currentConversation: 
+        currentConversation:
           state.currentConversation?.id === action.payload ? null : state.currentConversation,
       };
-    
+
     default:
       return state;
   }
