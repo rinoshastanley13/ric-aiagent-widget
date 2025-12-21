@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  widget:
+    build: .
+    container_name: ricagent-widget
+    restart: unless-stopped
+    ports:
+      - "3001:4000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
