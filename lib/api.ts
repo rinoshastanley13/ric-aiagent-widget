@@ -1,4 +1,4 @@
-import { Message, FileAttachment } from '@/types';
+import { Message, FileAttachment, Conversation } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_CHAT_API_URL;
 
@@ -15,30 +15,26 @@ export class ChatAPI {
     files: FileAttachment[] = [],
     onChunk: (chunk: string) => void,
     onComplete: () => void,
-    onError: (error: Error) => void
+    onError: (error: Error) => void,
+    email: string,
+    sessionId: string,
+    isNewChat: boolean = false
   ): Promise<void> {
     try {
-      const formData = new FormData();
-      formData.append('message', message);
-      
-      // Add files if any
-      files.forEach(file => {
-        // Convert FileAttachment to actual File objects if needed
-        // This assumes files are already uploaded and we have references
-      });
-
       const payload = {
-        //model: modelName,
-        prompt: message,
-        stream: true
+        message: message,
+        email: email,
+        session_id: sessionId === 'new' ? null : sessionId, // backend expects null for new or 'new' string. 
+        is_new_chat: isNewChat,
+        provider: 'botpress'
       };
 
-      const response = await fetch(`${API_BASE_URL}/aiagents/chat`, {
+      const response = await fetch(`http://localhost:8000/chat`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'X-API-KEY': 'QUlQcm94eXNTZXJ2ZXJfRW1haWxfQVBJX0tleTpBbGxhaDc4NiM=',
+          'X-API-KEY': 'test_secret_key_123',
         },
         body: JSON.stringify(payload),
       });
@@ -47,13 +43,14 @@ export class ChatAPI {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      // Read SSE stream
       const reader = response.body?.getReader();
       if (!reader) {
         throw new Error('No reader available');
       }
 
       const decoder = new TextDecoder();
-      
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;

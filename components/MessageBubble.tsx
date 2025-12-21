@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useState, useRef, useEffect, useLayoutEffect} from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -11,15 +11,17 @@ import { FileText } from "lucide-react";
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw'; // Add this import
 import DOMPurify from 'dompurify';
+import { ChoiceButtons } from './ChoiceButtons';
 
 interface MessageBubbleProps {
   message: Message;
   isStreaming?: boolean;
   feedback?: 'thumbsUp' | 'thumbsDown' | null;
+  onChoiceSelect?: (value: string) => void;
 }
 
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming = false }) => {
+export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming = false, onChoiceSelect }) => {
   const isUser = message.role === 'user';
 
   // Add state for feedback in your component
@@ -66,7 +68,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
     useLayoutEffect(() => {
       if (shadowHostRef.current && !shadowHostRef.current.shadowRoot) {
         const shadowRoot = shadowHostRef.current.attachShadow({ mode: 'open' });
-        
+
         // Add basic styles for better appearance
         const style = document.createElement('style');
         style.textContent = `
@@ -85,25 +87,24 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
             box-sizing: border-box;
           }
         `;
-        
+
         shadowRoot.appendChild(style);
-        
+
         // Create a container for the content
         const container = document.createElement('div');
         container.innerHTML = html;
         shadowRoot.appendChild(container);
-        
+
         // Mark as loaded to trigger any animations/transitions
         setTimeout(() => setIsLoaded(true), 50);
       }
     }, [html]);
 
     return (
-      <div 
-        ref={shadowHostRef} 
-        className={`w-full min-h-[200px] transition-opacity duration-300 ${
-          isLoaded ? 'opacity-100' : 'opacity-0'
-        }`}
+      <div
+        ref={shadowHostRef}
+        className={`w-full min-h-[200px] transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
       />
     );
   };
@@ -115,7 +116,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
         ADD_TAGS: ['iframe', 'script'],
         ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
       });
-      
+
       return (
         <div className="html-content-container my-4 p-4 border border-gray-300 rounded-lg bg-white">
           <div className="text-xs text-gray-500 mb-2 font-medium">
@@ -137,13 +138,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
       const match = /language-(\w+)/.exec(className || '');
       const language = match ? match[1] : '';
       const codeContent = String(children).replace(/\n$/, '');
-      
+
       if (!inline && language) {
         return (
           <div className="code-block my-4 rounded-lg overflow-hidden border border-gray-300 shadow-sm bg-gray-500">
             <div className="code-header bg-gray-800 text-gray-200 px-4 py-2 text-sm font-mono flex justify-between items-center">
               <span className="font-semibold">{language}</span>
-              <button 
+              <button
                 className="text-xs bg-gray-700 hover:bg-gray-600 cursor-pointer px-2 py-1 rounded transition-colors duration-200"
                 onClick={() => navigator.clipboard.writeText(codeContent)}
               >
@@ -151,7 +152,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
               </button>
             </div>
             <pre className="m-0 p-4 overflow-x-auto">
-              <code 
+              <code
                 className={`block text-sm font-mono text-gray-100 leading-relaxed whitespace-pre ${className || ''}`}
                 style={{
                   fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace'
@@ -164,9 +165,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
           </div>
         );
       }
-      
+
       return (
-        <code 
+        <code
           className="inline-code bg-gray-800 text-gray-500 px-2 py-1 rounded text-sm font-mono border border-gray-600"
           style={{
             fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace'
@@ -193,7 +194,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
     // Enhanced tables with better styling
     table: ({ children }: any) => (
       <div className="table-container rounded-sm my-6 overflow-x-auto  border border-gray-200/80 shadow-lg bg-white/95 backdrop-blur-sm">
-      
+
         <table className="markdown-table min-w-full ">
           {children}
         </table>
@@ -202,7 +203,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
 
     th: ({ children }: any) => (
       <th className="table-header px-4 py-3 text-left text-sm font-bold text-gray-800 uppercase tracking-wider border-b border-gray-300/60">
-      
+
         {children}
       </th>
     ),
@@ -284,8 +285,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
 
     // Links
     a: ({ href, children }: any) => (
-      <a 
-        href={href} 
+      <a
+        href={href}
         className="text-blue-600 hover:text-blue-800 text-sm underline transition-colors duration-200"
         target="_blank"
         rel="noopener noreferrer"
@@ -318,9 +319,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-6`}>
       <div className={`flex max-w-[90%] ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start space-x-3`}>
         {/* Avatar */}
-        <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${
-          isUser ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-gray-500 to-gray-600'
-        }`}>
+        <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${isUser ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-gray-500 to-gray-600'
+          }`}>
           {isUser ? (
             <User className="w-5 h-5 text-white" />
           ) : (
@@ -329,12 +329,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
         </div>
 
         {/* Message Content */}
-        <div className={`rounded-2xl p-5 max-w-full shadow-sm ${
-          isUser 
-            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white' 
-            : 'bg-white border border-gray-200 text-gray-800'
-        } ${isStreaming ? 'ring-2 ring-blue-200' : ''}`}>
-          
+        <div className={`rounded-2xl p-5 max-w-full shadow-sm ${isUser
+          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
+          : 'bg-white border border-gray-200 text-gray-800'
+          } ${isStreaming ? 'ring-2 ring-blue-200' : ''}`}>
+
           {/* Streaming indicator */}
           {isStreaming && !isUser && (
             <div className="flex items-center mb-3 bg-blue-50 rounded-lg px-3 py-2 border border-blue-200">
@@ -346,7 +345,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
               <span className="text-sm text-blue-700 ml-2 font-medium">AI is thinking...</span>
             </div>
           )}
-          
+
           {/* File attachments */}
           {message.files && message.files.length > 0 && (
             <div className="mb-4 space-y-2">
@@ -361,7 +360,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
               ))}
             </div>
           )}
-          
+
           {/* Message content */}
           <div className={`prose max-w-none ${isUser ? 'prose-invert' : 'prose-gray'} prose-sm md:prose-base`}>
             {isUser ? (
@@ -370,29 +369,36 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
               </div>
             ) : (
               <>
-              {/* Try to render as HTML first, fallback to markdown */}
-              {renderHTMLContent(message.content) || (
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeRaw]} // Add rehypeRaw here
-                  components={MarkdownComponents}
-                >
-                  {message.content}
-                </ReactMarkdown>
-              )}
+                {/* Try to render as HTML first, fallback to markdown */}
+                {renderHTMLContent(message.content) || (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeRaw]} // Add rehypeRaw here
+                    components={MarkdownComponents}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
+                )}
               </>
             )}
           </div>
-          
+
+          {/* Choice Buttons */}
+          {!isUser && message.choices && message.choices.length > 0 && onChoiceSelect && (
+            <ChoiceButtons
+              choices={message.choices!}
+              onSelect={onChoiceSelect}
+            />
+          )}
+
           {/* Timestamp */}
           {!isUser && (
             <div className={`text-xs mt-3 ${isUser ? 'text-blue-100' : 'text-gray-500'}`}>
               {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               {' '}
-              <button className={`p-1 rounded transition-colors ${
-                  feedback === 'thumbsUp' 
-                    ? 'bg-green-100 text-green-600' 
-                    : 'hover:bg-gray-200 text-gray-500 cursor-pointer'
+              <button className={`p-1 rounded transition-colors ${feedback === 'thumbsUp'
+                ? 'bg-green-100 text-green-600'
+                : 'hover:bg-gray-200 text-gray-500 cursor-pointer'
                 }`}
                 onClick={() => handleFeedback('thumbsUp')}
                 title="Good response"
@@ -401,10 +407,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
                 <ThumbsUp className="w-3 h-3" />
               </button>
 
-              <button className={`p-1 rounded transition-colors ${
-                  feedback === 'thumbsDown' 
-                    ? 'bg-red-100 text-red-600' 
-                    : 'hover:bg-gray-200 text-gray-500 cursor-pointer'
+              <button className={`p-1 rounded transition-colors ${feedback === 'thumbsDown'
+                ? 'bg-red-100 text-red-600'
+                : 'hover:bg-gray-200 text-gray-500 cursor-pointer'
                 }`}
                 onClick={() => handleFeedback('thumbsDown')}
                 title="Bad response"
@@ -415,7 +420,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
             </div>
           )}
 
-          
+
         </div>
       </div>
     </div>

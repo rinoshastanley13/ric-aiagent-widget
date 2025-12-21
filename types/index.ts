@@ -4,6 +4,7 @@ export interface Message {
   role: 'user' | 'assistant';
   timestamp: Date;
   files?: FileAttachment[];
+  choices?: Array<{ title: string; value: string }>;
 }
 
 export interface FileAttachment {

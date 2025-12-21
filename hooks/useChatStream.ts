@@ -10,14 +10,19 @@ export const useChatStream = () => {
   const streamMessage = useCallback(async (
     userMessage: string,
     files: FileAttachment[] = [],
-    onMessageUpdate: (message: Message) => void
+    onMessageUpdate: (message: Message) => void,
+    email: string,
+    sessionId: string,
+    isNewChat: boolean = false,
+    onSessionId?: (id: string) => void,
+    messageId?: string
   ) => {
     setIsStreaming(true);
     setError(null);
 
-    // Create assistant message placeholder
+    // Create assistant message placeholder with provided or generated ID
     const assistantMessage: Message = {
-      id: Date.now().toString(),
+      id: messageId || Date.now().toString(),
       content: '',
       role: 'assistant',
       timestamp: new Date(),
@@ -39,15 +44,33 @@ export const useChatStream = () => {
               const dataStr = line.slice(6); // Remove 'data: ' prefix
               if (dataStr.trim()) {
                 const parsed = JSON.parse(dataStr);
-                
+                if (!parsed) continue;
+
+                let shouldUpdate = false;
+
                 if (parsed.response) {
                   const text = parsed.response;
                   if (currentMessageRef.current) {
-                    //console.log('Current content:', text);
-                    //currentMessageRef.current.content += chunk;
                     currentMessageRef.current.content += text;
-                    onMessageUpdate({ ...currentMessageRef.current });
+                    shouldUpdate = true;
                   }
+                }
+
+                // Extract choices if present
+                if (parsed.choices && Array.isArray(parsed.choices)) {
+                  if (currentMessageRef.current) {
+                    currentMessageRef.current.choices = parsed.choices;
+                    shouldUpdate = true;
+                  }
+                }
+
+                // Only call onMessageUpdate once per chunk after processing everything
+                if (shouldUpdate && currentMessageRef.current) {
+                  onMessageUpdate({ ...currentMessageRef.current });
+                }
+
+                if (parsed.session_id && onSessionId) {
+                  onSessionId(parsed.session_id);
                 }
               }
             }
@@ -57,25 +80,25 @@ export const useChatStream = () => {
         }
       },
       // onComplete
-/*
-while (true) {
-        
-        const lines = chunk.split('\n').filter(line => line.trim());
-
-        for (const line of lines) {
-          try {
-            // Handle Server-Sent Events format (data: {...})
-            if (line.startsWith('data: ')) {
-              const dataStr = line.slice(6); // Remove 'data: ' prefix
-              if (dataStr.trim()) {
-                const parsed = JSON.parse(dataStr);
-                
-                if (parsed.response) {
-                  const text = parsed.response;
-                  setCurrentResponse(prev => prev + text);
-                  fullResponse += text;
-                }
-*/
+      /*
+      while (true) {
+              
+              const lines = chunk.split('\n').filter(line => line.trim());
+      
+              for (const line of lines) {
+                try {
+                  // Handle Server-Sent Events format (data: {...})
+                  if (line.startsWith('data: ')) {
+                    const dataStr = line.slice(6); // Remove 'data: ' prefix
+                    if (dataStr.trim()) {
+                      const parsed = JSON.parse(dataStr);
+                      
+                      if (parsed.response) {
+                        const text = parsed.response;
+                        setCurrentResponse(prev => prev + text);
+                        fullResponse += text;
+                      }
+      */
 
 
 
@@ -88,7 +111,10 @@ while (true) {
         setIsStreaming(false);
         setError(error.message);
         currentMessageRef.current = null;
-      }
+      },
+      email,
+      sessionId,
+      isNewChat
     );
   }, []);
 
@@ -96,7 +122,7 @@ while (true) {
     // Implementation for canceling the stream
     setIsStreaming(false);
     currentMessageRef.current = null;
-  }, []);
+  }, []); // Empty dependencies to ensure we always use the latest function signature
 
   return {
     streamMessage,
