@@ -1,6 +1,6 @@
-import { Message, FileAttachment, Conversation } from '@/types';
+import { FileAttachment, Conversation } from '@/types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_CHAT_API_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || 'http://122.172.82.155';
 
 export class ChatAPI {
   private static async handleResponse(response: Response) {
@@ -29,7 +29,7 @@ export class ChatAPI {
         provider: 'botpress'
       };
 
-      const response = await fetch(`http://localhost:8000/chat`, {
+      const response = await fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
