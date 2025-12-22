@@ -1,6 +1,6 @@
 import { FileAttachment, Conversation } from '@/types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || 'http://122.172.82.155';
+const API_BASE_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || 'http://localhost:8000';
 
 export class ChatAPI {
   private static async handleResponse(response: Response) {
