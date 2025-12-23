@@ -21,23 +21,51 @@ export const WidgetHeader: React.FC<WidgetHeaderProps> = ({
 
     return (
         <div
-            className="px-4 py-3 flex items-center justify-between shadow-md shrink-0 transition-colors duration-300"
-            style={{ backgroundColor: ui.headerColor || primaryColor }}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px 20px',
+                background: 'linear-gradient(135deg, #20973b, #1d549f)',
+                color: 'white',
+                borderRadius: '30px 30px 0px 0px',
+                minHeight: '72px'
+            }}
         >
             <div className="flex items-center gap-3">
                 <div
-                    className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-bold text-xs"
-                    style={{ color: primaryColor }}
+                    className="rounded-full bg-white flex items-center justify-center font-bold"
+                    style={{
+                        width: '40px',
+                        height: '40px',
+                        color: primaryColor,
+                        fontSize: '14px'
+                    }}
                 >
                     {displayAvatar}
                 </div>
-                <span className="text-white font-semibold text-sm">{displayTitle}</span>
+                <span className="text-white font-semibold" style={{ fontSize: '20px' }}>{displayTitle}</span>
             </div>
             <div className="flex items-center gap-2">
                 {showNewChat && onNewChat && (
                     <button
                         onClick={onNewChat}
-                        className="text-white text-xs border border-white/30 rounded-full px-3 py-1 hover:bg-white/10 transition"
+                        className="text-white transition cursor-pointer"
+                        style={{
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            border: '1px solid rgba(255, 255, 255, 0.4)',
+                            borderRadius: '20px',
+                            padding: '12px 14px',
+                            fontSize: '12px'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'white';
+                            e.currentTarget.style.color = '#1e3a8a';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                            e.currentTarget.style.color = 'white';
+                        }}
                     >
                         New Chat
                     </button>

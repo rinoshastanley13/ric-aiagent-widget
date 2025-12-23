@@ -265,13 +265,31 @@ export const ChatAgent: React.FC = () => {
   const shouldShowMessages = hasUserSentMessage || hasMessages;
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-gray-50 to-blue-50/30">
+    <div
+      style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        background: '#f8fafc',
+        borderRadius: '30px'
+      }}
+    >
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto">
+      <div
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          background: '#f8fafc',
+          borderRadius: '30px'
+        }}
+        className="hide-scrollbar"
+      >
         {!shouldShowMessages ? (
           <PromptSuggestions onPromptSelect={handlePromptSelect} />
         ) : (
-          <div className="max-w-4xl mx-auto py-6 px-4">
+          <div>
             {/* Render all messages */}
             {currentConversation?.messages?.map((message, index) => (
               <MessageBubble
@@ -288,7 +306,14 @@ export const ChatAgent: React.FC = () => {
       </div>
 
       {/* Chat Input */}
-      <div className="backdrop-blur-xl border border-white/40 shadow-2xl shadow-blue-300/10 rounded-t-2xl relative">
+      <div
+        style={{
+          padding: '16px 20px',
+          background: 'white',
+          borderTop: '1px solid #e2e8f0',
+          borderRadius: '0px 0px 30px 30px'
+        }}
+      >
         <ChatInput
           onSendMessage={handleSendMessage}
           disabled={isStreaming}
@@ -296,15 +321,6 @@ export const ChatAgent: React.FC = () => {
           onInputChange={setInputValue}
         />
       </div>
-
-      {/* Footer */}
-      <footer className="bg-white py-2 shadow-lg ring-1 ring-blue-100 ring-inset">
-        <div className="text-center">
-          <p className="text-xs text-gray-600 font-medium">
-            Powered by <span className="text-blue-600">Basha@AIProxy</span>
-          </p>
-        </div>
-      </footer>
     </div>
   );
 };

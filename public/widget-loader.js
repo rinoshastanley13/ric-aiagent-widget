@@ -35,13 +35,16 @@
     container.style.position = 'fixed';
     container.style.bottom = '20px';
     container.style.right = '20px';
-    container.style.width = '400px';
-    container.style.height = '600px';
-    container.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-    container.style.borderRadius = '12px';
+    container.style.width = '480px';
+    container.style.maxWidth = '90vw';
+    container.style.height = '700px';
+    container.style.maxHeight = '88vh';
+    container.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.15)';
+    container.style.borderRadius = '50px';
     container.style.overflow = 'hidden';
     container.style.zIndex = '999999';
     container.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    container.style.background = 'white'; // Ensure white background
     // Start hidden or minimized? For now, let's just show it.
     // Real implementation might start as a "bubble" launcher.
 
