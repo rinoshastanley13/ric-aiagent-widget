@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useUI } from '@/context/UIContext';
 
-interface Choice {
+export interface Choice {
     title: string;
     value: string;
 }
@@ -16,40 +16,43 @@ interface ChoiceButtonsProps {
 export const ChoiceButtons: React.FC<ChoiceButtonsProps> = ({ choices, onSelect }) => {
     const ui = useUI();
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-    const primaryColor = ui.primaryColor || '#2E3B8B';
 
-    // Icon mapping - use generic icons for choices
-    const getIcon = (index: number) => {
-        const icons = ['💬', '📋', '🔔', '🤖'];
-        return icons[index % icons.length];
+    const handleClick = (choice: Choice) => {
+        onSelect(choice.value);
     };
 
     return (
-        <div className="flex flex-col gap-3 mt-4">
+        <div
+            style={{
+                display: 'grid',
+                gap: '12px',
+                marginTop: '16px'
+            }}
+        >
             {choices.map((choice, index) => (
                 <button
                     key={index}
-                    onClick={() => onSelect(choice.value)}
+                    onClick={() => handleClick(choice)}
                     onMouseEnter={() => setHoveredIndex(index)}
                     onMouseLeave={() => setHoveredIndex(null)}
-                    className="w-full flex items-center gap-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100 transition-all text-left group"
                     style={{
-                        borderColor: hoveredIndex === index ? primaryColor : undefined,
-                        boxShadow: hoveredIndex === index ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' : undefined
+                        padding: '14px 18px',
+                        background: 'linear-gradient(180deg, #ffffff, #f6f8fb)',
+                        border: hoveredIndex === index ? '1px solid #20973b' : '1px solid #e3e7ee',
+                        borderRadius: '14px',
+                        color: '#1f2937',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        textAlign: 'left',
+                        transition: 'all 0.3s ease',
+                        lineHeight: 1.5,
+                        boxShadow: hoveredIndex === index
+                            ? '0 10px 24px rgba(32, 151, 59, 0.18)'
+                            : '0 2px 4px rgba(0, 0, 0, 0.05)',
+                        transform: hoveredIndex === index ? 'translateY(-2px)' : 'translateY(0)'
                     }}
                 >
-                    <span
-                        className="text-xl shrink-0 transition-transform duration-200"
-                        style={{ transform: hoveredIndex === index ? 'scale(1.1)' : 'scale(1)' }}
-                    >
-                        {getIcon(index)}
-                    </span>
-                    <span
-                        className="text-sm text-gray-700 transition-colors"
-                        style={{ color: hoveredIndex === index ? primaryColor : undefined }}
-                    >
-                        {choice.title}
-                    </span>
+                    {choice.title}
                 </button>
             ))}
         </div>

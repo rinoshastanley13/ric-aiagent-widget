@@ -28,13 +28,11 @@ body {
 }
 
 body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
+  background: linear-gradient(to bottom,
       transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
 }
 
 /* Custom scrollbar */
@@ -66,7 +64,17 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
 .scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
@@ -236,13 +244,34 @@ code {
 }
 
 /* Better syntax highlighting colors */
-.code-block .keyword { color: #c678dd; }
-.code-block .function { color: #61afef; }
-.code-block .string { color: #98c379; }
-.code-block .number { color: #d19a66; }
-.code-block .comment { color: #5c6370; font-style: italic; }
-.code-block .class-name { color: #e5c07b; }
-.code-block .operator { color: #56b6c2; }
+.code-block .keyword {
+  color: #c678dd;
+}
+
+.code-block .function {
+  color: #61afef;
+}
+
+.code-block .string {
+  color: #98c379;
+}
+
+.code-block .number {
+  color: #d19a66;
+}
+
+.code-block .comment {
+  color: #5c6370;
+  font-style: italic;
+}
+
+.code-block .class-name {
+  color: #e5c07b;
+}
+
+.code-block .operator {
+  color: #56b6c2;
+}
 
 
 

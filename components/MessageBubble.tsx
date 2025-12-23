@@ -316,23 +316,31 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
   };
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-6`}>
-      <div className={`flex max-w-[90%] ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start space-x-3`}>
-        {/* Avatar */}
-        <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${isUser ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-gray-500 to-gray-600'
-          }`}>
-          {isUser ? (
-            <User className="w-5 h-5 text-white" />
-          ) : (
-            <Bot className="w-5 h-5 text-white" />
-          )}
-        </div>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
+      <div className={`flex max-w-[90%] ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start`} style={{ gap: '0px' }}>
+        {/* Avatar - Hidden for cleaner look matching HTML */}
 
         {/* Message Content */}
-        <div className={`rounded-2xl p-5 max-w-full shadow-sm ${isUser
-          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
-          : 'bg-white border border-gray-200 text-gray-800'
-          } ${isStreaming ? 'ring-2 ring-blue-200' : ''}`}>
+        <div
+          className={`p-3 max-w-full ${isStreaming ? 'ring-2 ring-blue-200' : ''}`}
+          style={isUser ? {
+            background: 'linear-gradient(90deg, #22c55e, #1d549f)',
+            color: 'white',
+            borderRadius: '12px',
+            borderBottomRightRadius: '4px',
+            fontSize: '14px',
+            lineHeight: '1.5'
+          } : {
+            background: 'white',
+            color: '#2f3a4a',
+            border: '1px solid #c1c2c4',
+            borderRadius: '12px',
+            borderBottomLeftRadius: '4px',
+            boxShadow: '0 6px 18px rgba(0, 0, 0, 0.06)',
+            fontSize: '14px',
+            lineHeight: '1.5'
+          }}
+        >
 
           {/* Streaming indicator */}
           {isStreaming && !isUser && (
