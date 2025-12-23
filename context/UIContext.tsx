@@ -20,9 +20,9 @@ export interface UIConfig {
 const defaultConfig: UIConfig = {
     primaryColor: '#2E3B8B',
     headerColor: '#2E3B8B',
-    headerTitle: 'RICA',
+    headerTitle: 'Compliance AI Assistant',
     headerIconText: 'RC',
-    botName: 'RICA',
+    botName: 'Compliance AI Assistant',
     button: {
         backgroundColor: '#FFFFFF', // Default card/button background
         textColor: '#374151',
