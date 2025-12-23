@@ -11,3 +11,10 @@ services:
       - NODE_ENV=production
     env_file:
       - .env
+    networks:
+      - ricago-net
+
+networks:
+  ricago-net:
+    external:
+      name: ric-aiagent_ricago-net
