@@ -1,6 +1,5 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getTenantByKey } from '@/lib/auth-config';
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -11,51 +10,56 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Missing API Key' }, { status: 400 });
     }
 
-    // 1. Find Tenant by Key (using secure config)
-    const tenant = getTenantByKey(key);
+    try {
+        // Call FastAPI backend to validate widget key
+        const fastApiUrl = process.env.NEXT_PUBLIC_CHAT_API_URL || 'http://localhost:8000';
+        const validateUrl = `${fastApiUrl}/api/widget/validate?key=${encodeURIComponent(key)}`;
 
-    if (!tenant) {
-        return NextResponse.json({ error: 'Invalid API Key' }, { status: 403 });
-    }
+        const response = await fetch(validateUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
-    // 2. Check if Tenant is Active
-    if (!tenant.active) {
-        return NextResponse.json({ error: 'Tenant access revoked' }, { status: 403 });
-    }
-
-    // 3. Check Origin (Domain Authorization)
-    const origin = request.headers.get('origin') || request.headers.get('referer');
-    // In development (direct browser nav), origin might be null or localhost. 
-    // For strict security, we'd block null, but for this demo we allow it or check if it matches.
-
-    // Simple origin check (in prod use strict regex)
-    if (tenant.allowedOrigins[0] !== '*') {
-        if (!origin || !tenant.allowedOrigins.some(allowed => origin.includes(allowed))) {
-            console.log(`Blocked origin: ${origin} for tenant ${tenant.name}`);
-            return NextResponse.json({ error: 'Domain not authorized' }, { status: 403 });
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Invalid API Key' }));
+            return NextResponse.json(
+                { error: errorData.detail || errorData.error || 'Invalid API Key' },
+                { status: response.status }
+            );
         }
-    }
 
-    // 4. Success
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    };
+        const data = await response.json();
 
-    return NextResponse.json({
-        valid: true,
-        tenant: {
-            id: tenant.id,
-            name: tenant.name
-        },
-        config: {
-            theme: 'light',
-            primaryColor: '#2563eb', // blue-600
-            position: 'bottom-right',
-            title: `${tenant.name} Assistant`
+        // 3. Check Origin (Domain Authorization) - can be done here or in FastAPI
+        const origin = request.headers.get('origin') || request.headers.get('referer');
+        const allowedOrigins = data.config?.allowedOrigins || ['*'];
+
+        // Simple origin check (in prod use strict regex)
+        if (allowedOrigins[0] !== '*') {
+            if (!origin || !allowedOrigins.some((allowed: string) => origin.includes(allowed))) {
+                console.log(`Blocked origin: ${origin} for tenant ${data.tenant?.name}`);
+                return NextResponse.json({ error: 'Domain not authorized' }, { status: 403 });
+            }
         }
-    }, { headers });
+
+        // 4. Success - return the validated data from FastAPI
+        const headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        };
+
+        return NextResponse.json(data, { headers });
+
+    } catch (error) {
+        console.error('Error validating widget key:', error);
+        return NextResponse.json(
+            { error: 'Validation service unavailable' },
+            { status: 503 }
+        );
+    }
 }
 
 export async function OPTIONS(request: NextRequest) {

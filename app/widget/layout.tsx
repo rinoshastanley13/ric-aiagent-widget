@@ -12,7 +12,7 @@ export default function WidgetLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="h-screen w-screen bg-white overflow-hidden">
+        <div className="h-screen w-screen bg-transparent overflow-hidden">
             {children}
         </div>
     );
