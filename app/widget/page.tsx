@@ -151,7 +151,7 @@ function WidgetContent() {
                     flexDirection: 'column',
                     background: 'white',
                     overflow: 'hidden',
-                    borderRadius: '50px'  // Rounded container like HTML
+                    // borderRadius: '50px'  // Removed to avoid gap with iframe container
                 }}
             >
                 {viewState === 'LOADING' && (
