@@ -9,12 +9,7 @@ services:
       - "3001:4000"
     environment:
       - NODE_ENV=production
+      - PORT=4000
+      - NEXT_PUBLIC_CHAT_API_URL=http://106.51.109.172
     env_file:
       - .env
-    networks:
-      - ricago-net
-
-networks:
-  ricago-net:
-    external:
-      name: ric-aiagent_ricago-net
