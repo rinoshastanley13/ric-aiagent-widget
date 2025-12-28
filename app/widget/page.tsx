@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useWidgetBridge } from '@/hooks/useWidgetBridge';
 import { ChatAgent } from '@/components/ChatAgent';
 import { ChatProvider } from '@/context/ChatContext';
 import { UIProvider, UIConfig } from '@/context/UIContext';
@@ -27,27 +28,20 @@ function WidgetContent() {
 
     const [uiConfig, setUiConfig] = useState<UIConfig | null>(null);
 
+    const { context } = useWidgetBridge();
+
     useEffect(() => {
         const validateWidget = async () => {
-            const key = searchParams.get('key');
-            const id = searchParams.get('id');
-            const uiParam = searchParams.get('ui');
+            if (!context) return; // Wait for bridge context
 
-            // Parse UI Config
-            if (uiParam) {
-                try {
-                    const parsed = JSON.parse(decodeURIComponent(uiParam));
-                    setUiConfig(parsed);
-                } catch (e) {
-                    console.error('Failed to parse UI config', e);
-                }
-            }
+            const key = context.app_unique_key;
+            const id = context.app_id;
 
-            // CMS Auto-Login Parameters
-            const cmsName = searchParams.get('name');
-            const cmsEmail = searchParams.get('email');
-            const cmsTenantId = searchParams.get('tenantId');
-            const cmsCompany = searchParams.get('companyName');
+            // CMS Auto-Login Parameters from bridge
+            const cmsName = context.user_name;
+            const cmsEmail = context.user_email;
+            const cmsTenantId = context.tenantId;
+            const cmsCompany = context.company;
 
             if (!key || !id) {
                 setViewState('ERROR');
@@ -118,7 +112,7 @@ function WidgetContent() {
         };
 
         validateWidget();
-    }, [searchParams]);
+    }, [context]);
 
     const handleNewChat = () => {
         // Clear user session and create new guest user
