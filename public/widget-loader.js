@@ -35,10 +35,10 @@
     container.style.position = 'fixed';
     container.style.bottom = '20px';
     container.style.right = '20px';
-    container.style.width = '400px';
+    container.style.width = '480px';
     container.style.height = '600px';
     container.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-    container.style.borderRadius = '12px';
+    container.style.borderRadius = '50px';
     container.style.overflow = 'hidden';
     container.style.zIndex = '999999';
     container.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
@@ -47,7 +47,7 @@
 
     // Create the iframe
     var iframe = document.createElement('iframe');
-    iframe.src = host + '/widget?key=' + encodeURIComponent(key) + '&id=' + encodeURIComponent(id);
+    iframe.src = host + '/widget'; // No params, clean URL
     iframe.style.width = '100%';
     iframe.style.height = '100%';
     iframe.style.border = 'none';
@@ -56,11 +56,34 @@
     container.appendChild(iframe);
     document.body.appendChild(container);
 
-    // Optional: Message listener for "close" or "minimize" events from iframe
+    // Bridge Logic
     window.addEventListener('message', function (event) {
         // Validate origin if needed in production
         if (event.data === 'close-widget') {
             container.style.display = 'none';
+        }
+
+        if (event.data && event.data.type === 'WIDGET_READY') {
+            // Widget is ready, send the context
+            console.log('Loader: Sending INIT_WIDGET');
+            var payload = {
+                app_unique_key: key,
+                app_id: id,
+                // Pass optional user data if available
+                user_name: myScript.getAttribute('data-name'),
+                user_email: myScript.getAttribute('data-email'),
+                tenantId: myScript.getAttribute('data-tenant-id'),
+                company: myScript.getAttribute('data-company-name')
+            };
+
+            // Send to iframe
+            // We need to use the contentWindow of the iframe
+            if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    type: 'INIT_WIDGET',
+                    payload: payload
+                }, '*'); // Target origin '*' for now
+            }
         }
     });
 
