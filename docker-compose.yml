@@ -10,6 +10,6 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=4000
-      - NEXT_PUBLIC_CHAT_API_URL=http://106.51.109.172
+      - NEXT_PUBLIC_CHAT_API_URL=http://106.51.109.172:5500
     env_file:
       - .env
