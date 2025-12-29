@@ -50,6 +50,10 @@ export const useChatStream = () => {
                 const parsed = JSON.parse(dataStr);
                 if (!parsed) continue;
 
+                if (parsed.error) {
+                  throw new Error(parsed.error);
+                }
+
                 let shouldUpdate = false;
 
                 if (parsed.response) {
