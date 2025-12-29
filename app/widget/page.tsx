@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useWidgetBridge } from '@/hooks/useWidgetBridge';
 import { ChatAgent } from '@/components/ChatAgent';
 import { ChatProvider } from '@/context/ChatContext';
 import { UIProvider, UIConfig } from '@/context/UIContext';
-import { WidgetWelcome } from '@/components/WidgetWelcome';
 import { fetchCMSContext } from '@/lib/cms-context';
 import { WidgetHeader } from '@/components/WidgetHeader';
 
@@ -16,43 +16,32 @@ interface WidgetConfig {
     title: string;
 }
 
-type ViewState = 'LOADING' | 'ERROR' | 'WELCOME' | 'REGISTER' | 'CHAT';
+type ViewState = 'LOADING' | 'ERROR' | 'CHAT';
 
 function WidgetContent() {
     const searchParams = useSearchParams();
     const [viewState, setViewState] = useState<ViewState>('LOADING');
     const [config, setConfig] = useState<WidgetConfig | null>(null);
 
-    // Registration form state
-    const [formName, setFormName] = useState('');
-    const [formEmail, setFormEmail] = useState('');
-
     // User context
     const [user, setUser] = useState<{ name: string, email: string } | null>(null);
 
     const [uiConfig, setUiConfig] = useState<UIConfig | null>(null);
 
+    const { context } = useWidgetBridge();
+
     useEffect(() => {
         const validateWidget = async () => {
-            const key = searchParams.get('key');
-            const id = searchParams.get('id');
-            const uiParam = searchParams.get('ui');
+            if (!context) return; // Wait for bridge context
 
-            // Parse UI Config
-            if (uiParam) {
-                try {
-                    const parsed = JSON.parse(decodeURIComponent(uiParam));
-                    setUiConfig(parsed);
-                } catch (e) {
-                    console.error('Failed to parse UI config', e);
-                }
-            }
+            const key = context.app_unique_key;
+            const id = context.app_id;
 
-            // CMS Auto-Login Parameters
-            const cmsName = searchParams.get('name');
-            const cmsEmail = searchParams.get('email');
-            const cmsTenantId = searchParams.get('tenantId');
-            const cmsCompany = searchParams.get('companyName');
+            // CMS Auto-Login Parameters from bridge
+            const cmsName = context.user_name;
+            const cmsEmail = context.user_email;
+            const cmsTenantId = context.tenantId;
+            const cmsCompany = context.company;
 
             if (!key || !id) {
                 setViewState('ERROR');
@@ -94,12 +83,23 @@ function WidgetContent() {
                     }
 
                     // Standard Flow
-                    const storedUser = localStorage.getItem('widget_user');
-                    if (storedUser) {
-                        setUser(JSON.parse(storedUser));
+                    let storedUserString = localStorage.getItem('widget_user');
+                    let storedUser = storedUserString ? JSON.parse(storedUserString) : null;
+
+                    if (!storedUser) {
+                        // Auto-create Guest User to bypass registration
+                        const guestId = Math.random().toString(36).substring(7);
+                        storedUser = {
+                            name: 'Guest',
+                            email: `guest_${guestId}@example.com`,
+                            isGuest: true
+                        };
+                        localStorage.setItem('widget_user', JSON.stringify(storedUser));
                     }
 
-                    // Skip WELCOME and go directly to CHAT for Botpress welcome
+                    setUser(storedUser);
+
+                    // Skip WELCOME/REGISTER and go directly to CHAT
                     setViewState('CHAT');
 
                 } else {
@@ -112,47 +112,28 @@ function WidgetContent() {
         };
 
         validateWidget();
-    }, [searchParams]);
-
-    const handleOptionSelect = (option: string) => {
-        // Allow all options to proceed to registration/chat
-        if (user) {
-            setViewState('CHAT');
-        } else {
-            setViewState('REGISTER');
-        }
-    };
-
-    const handleRegister = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            const response = await fetch('/api/widget/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: formName, email: formEmail })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const userData = data.user;
-                localStorage.setItem('widget_user', JSON.stringify(userData));
-                setUser(userData);
-                setViewState('CHAT'); // Skip WELCOME, go directly to CHAT for Botpress welcome
-            } else {
-                alert('Registration failed');
-            }
-        } catch (err) {
-            console.error('Registration failed');
-            alert('Registration failed'); // Also alert on network/other errors
-        }
-    };
+    }, [context]);
 
     const handleNewChat = () => {
-        // Clear user session to force re-registration
-        localStorage.removeItem('widget_user');
+        // Clear user session and create new guest user
         localStorage.removeItem('cms_context');
-        setUser(null);
-        setViewState('REGISTER'); // Go to registration, then directly to CHAT
+
+        const guestId = Math.random().toString(36).substring(7);
+        const newUser = {
+            name: 'Guest',
+            email: `guest_${guestId}@example.com`,
+            isGuest: true
+        };
+        localStorage.setItem('widget_user', JSON.stringify(newUser));
+        setUser(newUser);
+
+        // Force reload by briefly setting state (or rely on ChatAgent to detect user change if keys update context)
+        // Since we are not unmounting, we might need a key on ChatProvider or similar.
+        // For now, let's keep it simple: The ChatAgent relies on local storage or passed context.
+        // But ChatAgent initializes on mount.
+        // Let's force a remount of ChatProvider by toggling a key or state.
+        setViewState('LOADING');
+        setTimeout(() => setViewState('CHAT'), 0);
     };
 
     return (
@@ -164,7 +145,7 @@ function WidgetContent() {
                     flexDirection: 'column',
                     background: 'white',
                     overflow: 'hidden',
-                    borderRadius: '50px'  // Rounded container like HTML
+                    // borderRadius: '50px'  // Removed to avoid gap with iframe container
                 }}
             >
                 {viewState === 'LOADING' && (
@@ -184,51 +165,7 @@ function WidgetContent() {
                     </div>
                 )}
 
-                {viewState === 'WELCOME' && (
-                    <WidgetWelcome onOptionSelect={handleOptionSelect} />
-                )}
 
-                {viewState === 'REGISTER' && (
-                    <div className="flex flex-col h-full bg-white p-6 justify-center">
-                        <h2 className="text-xl font-bold mb-2 text-gray-800">Welcome</h2>
-                        <p className="text-sm text-gray-600 mb-6">Please enter your details to start chatting.</p>
-
-                        <form onSubmit={handleRegister} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
-                                <input
-                                    required
-                                    type="text"
-                                    value={formName}
-                                    onChange={e => setFormName(e.target.value)}
-                                    className="w-full text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="John Doe"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
-                                <input
-                                    required
-                                    type="email"
-                                    value={formEmail}
-                                    onChange={e => setFormEmail(e.target.value)}
-                                    className="w-full text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="john@example.com"
-                                />
-                            </div>
-                            <button type="submit" className="w-full bg-[#2E3B8B] text-white rounded-md py-2 text-sm font-semibold hover:bg-blue-800 transition">
-                                Start Chat
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setViewState('WELCOME')}
-                                className="w-full text-gray-500 text-xs hover:underline mt-2"
-                            >
-                                Back
-                            </button>
-                        </form>
-                    </div>
-                )}
 
                 {viewState === 'CHAT' && (
                     <>
