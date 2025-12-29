@@ -19,7 +19,9 @@ export class ChatAPI {
     email: string,
     sessionId: string | null,
     threadId: string | null,
-    isNewChat: boolean = false
+    isNewChat: boolean = false,
+    apiKey: string,
+    provider: string = 'botpress'
   ): Promise<void> {
     try {
       const payload = {
@@ -28,7 +30,7 @@ export class ChatAPI {
         session_id: sessionId === 'new' ? null : sessionId,
         thread_id: threadId === 'new' ? null : threadId,
         is_new_chat: isNewChat,
-        provider: 'botpress'
+        provider: provider
       };
 
       const response = await fetch(`${API_BASE_URL}/chat`, {
@@ -36,7 +38,7 @@ export class ChatAPI {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'X-API-KEY': 'test_secret_key_123',
+          'X-API-KEY': apiKey,
         },
         body: JSON.stringify(payload),
       });
@@ -84,15 +86,23 @@ export class ChatAPI {
     }
   }
 
-  static async getThreads(sessionId: string): Promise<any[]> {
-    const response = await fetch(`${API_BASE_URL}/chat/sessions/${sessionId}/threads`);
+  static async getThreads(sessionId: string, apiKey: string): Promise<any[]> {
+    const response = await fetch(`${API_BASE_URL}/chat/sessions/${sessionId}/threads`, {
+      headers: {
+        'X-API-KEY': apiKey
+      }
+    });
     await this.handleResponse(response);
     const data = await response.json();
     return data.threads;
   }
 
-  static async getThreadMessages(threadId: string): Promise<any[]> {
-    const response = await fetch(`${API_BASE_URL}/chat/threads/${threadId}/messages`);
+  static async getThreadMessages(threadId: string, apiKey: string): Promise<any[]> {
+    const response = await fetch(`${API_BASE_URL}/chat/threads/${threadId}/messages`, {
+      headers: {
+        'X-API-KEY': apiKey
+      }
+    });
     await this.handleResponse(response);
     return response.json();
   }
