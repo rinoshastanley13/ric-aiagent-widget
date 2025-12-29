@@ -21,6 +21,7 @@ export const Header: React.FC = () => {
   const handleNewChat = () => {
     const newConversation = {
       id: Date.now().toString(),
+      session_id: 'new',
       title: '+',
       createdAt: new Date(),
       messages: [],

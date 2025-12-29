@@ -14,17 +14,19 @@ export class ChatAPI {
     message: string,
     files: FileAttachment[] = [],
     onChunk: (chunk: string) => void,
-    onComplete: () => void,
+    onComplete: (sessionId: string, threadId: string) => void,
     onError: (error: Error) => void,
     email: string,
-    sessionId: string,
+    sessionId: string | null,
+    threadId: string | null,
     isNewChat: boolean = false
   ): Promise<void> {
     try {
       const payload = {
         message: message,
         email: email,
-        session_id: sessionId === 'new' ? null : sessionId, // backend expects null for new or 'new' string. 
+        session_id: sessionId === 'new' ? null : sessionId,
+        thread_id: threadId === 'new' ? null : threadId,
         is_new_chat: isNewChat,
         provider: 'botpress'
       };
@@ -50,19 +52,49 @@ export class ChatAPI {
       }
 
       const decoder = new TextDecoder();
+      let lastSessionId = sessionId || '';
+      let lastThreadId = threadId || '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         const chunk = decoder.decode(value);
+
+        // Parse chunk to extract session/thread IDs if possible
+        try {
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.substring(6));
+              if (data.session_id) lastSessionId = data.session_id;
+              if (data.thread_id) lastThreadId = data.thread_id;
+            }
+          }
+        } catch (e) {
+          // Ignore parse errors for partial chunks
+        }
+
         onChunk(chunk);
       }
 
-      onComplete();
+      onComplete(lastSessionId, lastThreadId);
     } catch (error) {
       onError(error as Error);
     }
+  }
+
+  static async getThreads(sessionId: string): Promise<any[]> {
+    const response = await fetch(`${API_BASE_URL}/chat/sessions/${sessionId}/threads`);
+    await this.handleResponse(response);
+    const data = await response.json();
+    return data.threads;
+  }
+
+  static async getThreadMessages(threadId: string): Promise<any[]> {
+    const response = await fetch(`${API_BASE_URL}/chat/threads/${threadId}/messages`);
+    await this.handleResponse(response);
+    return response.json();
   }
 
   static async getConversations(): Promise<Conversation[]> {

@@ -15,7 +15,8 @@ export interface FileAttachment {
 }
 
 export interface Conversation {
-  id: string;
+  id: string; // Map to thread_id
+  session_id: string;
   title: string;
   createdAt: Date;
   messages: Message[];
@@ -35,12 +36,14 @@ export interface PromptTemplate {
   category: 'compliance' | 'actions' | 'general';
   content: string;
   icon: string;
-  description?: string; // Add this line
+  description?: string;
 }
 
 export interface ChatState {
   conversations: Conversation[];
   currentConversation: Conversation | null;
+  currentThreadId: string | null;
+  currentSessionId: string | null;
   isStreaming: boolean;
   user: User | null;
   isSidebarCollapsed: boolean;
