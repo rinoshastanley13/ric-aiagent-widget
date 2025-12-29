@@ -10,10 +10,11 @@ import { Message, FileAttachment, PromptTemplate } from '@/types';
 
 interface ChatAgentProps {
   apiKey: string;
+  appId?: string;
   provider?: string;
 }
 
-export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, provider = 'botpress' }) => {
+export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 'botpress' }) => {
   const { state, dispatch } = useChat();
   const { streamMessage, isStreaming, error } = useChatStream();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -116,7 +117,8 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, provider = 'botpre
                 }
               });
             },
-            assistantMessageId
+            assistantMessageId,
+            appId
           );
         } catch (e) {
           console.error("Welcome message failed", e);
@@ -226,7 +228,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, provider = 'botpre
         apiKey,
         provider,
         (newSessionId, newThreadId) => {
-           dispatch({
+          dispatch({
             type: 'SET_IDS',
             payload: {
               sessionId: newSessionId,

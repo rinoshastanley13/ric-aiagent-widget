@@ -6,14 +6,18 @@ export async function GET(request: NextRequest) {
     const key = searchParams.get('key');
     const widgetId = searchParams.get('id');
 
-    if (!key) {
+    if (!key && !widgetId) {
         return NextResponse.json({ error: 'Missing API Key' }, { status: 400 });
     }
 
     try {
         // Call FastAPI backend to validate widget key
         const fastApiUrl = process.env.CHAT_API_INTERNAL_URL || process.env.NEXT_PUBLIC_CHAT_API_URL || 'http://localhost:8000';
-        const validateUrl = `${fastApiUrl}/api/widget/validate?key=${encodeURIComponent(key)}`;
+        let validateUrl = `${fastApiUrl}/api/widget/validate?key=${encodeURIComponent(key || '')}`;
+
+        if (widgetId) {
+            validateUrl += `&widgetId=${encodeURIComponent(widgetId)}`;
+        }
 
         const response = await fetch(validateUrl, {
             method: 'GET',

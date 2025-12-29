@@ -18,7 +18,8 @@ export const useChatStream = () => {
     apiKey: string,
     provider: string = 'botpress',
     onIdsUpdate?: (sessionId: string, threadId: string) => void,
-    messageId?: string
+    messageId?: string,
+    appId?: string
   ) => {
     setIsStreaming(true);
     setError(null);
@@ -101,7 +102,8 @@ export const useChatStream = () => {
       threadId,
       isNewChat,
       apiKey,
-      provider
+      provider,
+      appId
     );
   }, []);
 
