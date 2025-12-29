@@ -173,7 +173,10 @@ function WidgetContent() {
                         <div className="flex-1 overflow-hidden relative">
                             <ChatProvider>
                                 <div className="h-full flex flex-col">
-                                    <ChatAgent />
+                                    <ChatAgent 
+                                        apiKey={context?.app_unique_key || ''} 
+                                        provider="botpress" 
+                                    />
                                 </div>
                             </ChatProvider>
                         </div>

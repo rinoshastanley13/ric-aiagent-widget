@@ -15,6 +15,8 @@ export const useChatStream = () => {
     sessionId: string | null,
     threadId: string | null,
     isNewChat: boolean = false,
+    apiKey: string,
+    provider: string = 'botpress',
     onIdsUpdate?: (sessionId: string, threadId: string) => void,
     messageId?: string
   ) => {
@@ -97,7 +99,9 @@ export const useChatStream = () => {
       email,
       sessionId,
       threadId,
-      isNewChat
+      isNewChat,
+      apiKey,
+      provider
     );
   }, []);
 

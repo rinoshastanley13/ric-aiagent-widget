@@ -8,7 +8,12 @@ import { useChat } from '@/context/ChatContext';
 import { useChatStream } from '@/hooks/useChatStream';
 import { Message, FileAttachment, PromptTemplate } from '@/types';
 
-export const ChatAgent: React.FC = () => {
+interface ChatAgentProps {
+  apiKey: string;
+  provider?: string;
+}
+
+export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, provider = 'botpress' }) => {
   const { state, dispatch } = useChat();
   const { streamMessage, isStreaming, error } = useChatStream();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -99,6 +104,8 @@ export const ChatAgent: React.FC = () => {
             state.currentSessionId,
             'new', // Use 'new' for threadId within session
             true, // isNewChat (new thread)
+            apiKey,
+            provider,
             (newSessionId, newThreadId) => {
               dispatch({
                 type: 'SET_IDS',
@@ -216,6 +223,8 @@ export const ChatAgent: React.FC = () => {
         backendSessionId,
         backendThreadId,
         isNewChat,
+        apiKey,
+        provider,
         (newSessionId, newThreadId) => {
            dispatch({
             type: 'SET_IDS',
