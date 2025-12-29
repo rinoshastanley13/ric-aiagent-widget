@@ -23,6 +23,7 @@ export const UserMenu: React.FC = () => {
   const handleNewChat = () => {
     const newConversation = {
       id: Date.now().toString(),
+      session_id: 'new',
       title: 'New Chat',
       createdAt: new Date(),
       messages: [],

@@ -12,9 +12,10 @@ export const useChatStream = () => {
     files: FileAttachment[] = [],
     onMessageUpdate: (message: Message) => void,
     email: string,
-    sessionId: string,
+    sessionId: string | null,
+    threadId: string | null,
     isNewChat: boolean = false,
-    onSessionId?: (id: string) => void,
+    onIdsUpdate?: (sessionId: string, threadId: string) => void,
     messageId?: string
   ) => {
     setIsStreaming(true);
@@ -69,8 +70,8 @@ export const useChatStream = () => {
                   onMessageUpdate({ ...currentMessageRef.current });
                 }
 
-                if (parsed.session_id && onSessionId) {
-                  onSessionId(parsed.session_id);
+                if ((parsed.session_id || parsed.thread_id) && onIdsUpdate) {
+                  onIdsUpdate(parsed.session_id || '', parsed.thread_id || '');
                 }
               }
             }
@@ -80,31 +81,12 @@ export const useChatStream = () => {
         }
       },
       // onComplete
-      /*
-      while (true) {
-              
-              const lines = chunk.split('\n').filter(line => line.trim());
-      
-              for (const line of lines) {
-                try {
-                  // Handle Server-Sent Events format (data: {...})
-                  if (line.startsWith('data: ')) {
-                    const dataStr = line.slice(6); // Remove 'data: ' prefix
-                    if (dataStr.trim()) {
-                      const parsed = JSON.parse(dataStr);
-                      
-                      if (parsed.response) {
-                        const text = parsed.response;
-                        setCurrentResponse(prev => prev + text);
-                        fullResponse += text;
-                      }
-      */
-
-
-
-      () => {
+      (finalSessionId: string, finalThreadId: string) => {
         setIsStreaming(false);
         currentMessageRef.current = null;
+        if (onIdsUpdate) {
+          onIdsUpdate(finalSessionId, finalThreadId);
+        }
       },
       // onError
       (error: Error) => {
@@ -114,6 +96,7 @@ export const useChatStream = () => {
       },
       email,
       sessionId,
+      threadId,
       isNewChat
     );
   }, []);
@@ -122,7 +105,7 @@ export const useChatStream = () => {
     // Implementation for canceling the stream
     setIsStreaming(false);
     currentMessageRef.current = null;
-  }, []); // Empty dependencies to ensure we always use the latest function signature
+  }, []);
 
   return {
     streamMessage,

@@ -9,9 +9,10 @@ type ChatAction =
   | { type: 'SET_CURRENT_CONVERSATION'; payload: Conversation | null }
   | { type: 'ADD_MESSAGE'; payload: { conversationId: string; message: Message } }
   | { type: 'UPDATE_MESSAGE'; payload: { conversationId: string; messageId: string; content: string; choices?: Array<{ title: string; value: string }> } }
+  | { type: 'SET_IDS'; payload: { sessionId: string; threadId: string; conversationId: string } }
   | { type: 'TOGGLE_SIDEBAR' }
   | { type: 'DELETE_CONVERSATION'; payload: string }
-  | { type: 'SHOW_PROMPT_SUGGESTIONS'; payload: boolean }; // Add this
+  | { type: 'SHOW_PROMPT_SUGGESTIONS'; payload: boolean };
 
 interface ChatContextType {
   state: ChatState;
@@ -21,10 +22,12 @@ interface ChatContextType {
 const initialState: ChatState = {
   conversations: [],
   currentConversation: null,
+  currentThreadId: null,
+  currentSessionId: null,
   isStreaming: false,
   user: null,
   isSidebarCollapsed: false,
-  showPromptSuggestions: false, // Add this
+  showPromptSuggestions: false,
 };
 
 const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
@@ -88,6 +91,22 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
             : state.currentConversation,
       };
 
+    case 'SET_IDS':
+      return {
+        ...state,
+        currentSessionId: action.payload.sessionId,
+        currentThreadId: action.payload.threadId,
+        conversations: state.conversations.map(conv =>
+          conv.id === action.payload.conversationId
+            ? { ...conv, session_id: action.payload.sessionId }
+            : conv
+        ),
+        currentConversation:
+          state.currentConversation?.id === action.payload.conversationId
+            ? { ...state.currentConversation, session_id: action.payload.sessionId }
+            : state.currentConversation,
+      };
+
     case 'TOGGLE_SIDEBAR':
       return { ...state, isSidebarCollapsed: !state.isSidebarCollapsed };
 
@@ -97,6 +116,7 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
         conversations: state.conversations.filter(conv => conv.id !== action.payload),
         currentConversation:
           state.currentConversation?.id === action.payload ? null : state.currentConversation,
+        currentThreadId: state.currentThreadId === action.payload ? null : state.currentThreadId,
       };
 
     default:
