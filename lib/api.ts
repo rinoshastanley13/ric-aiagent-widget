@@ -27,8 +27,8 @@ export class ChatAPI {
       const payload = {
         message: message,
         email: email,
-        session_id: sessionId === 'new' ? null : sessionId,
-        thread_id: threadId === 'new' ? null : threadId,
+        session_id: !sessionId || sessionId === 'new' ? 'new' : sessionId,
+        thread_id: !threadId || threadId === 'new' ? 'new' : threadId,
         is_new_chat: isNewChat,
         provider: provider
       };
