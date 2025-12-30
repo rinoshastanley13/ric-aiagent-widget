@@ -98,12 +98,12 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
         currentThreadId: action.payload.threadId,
         conversations: state.conversations.map(conv =>
           conv.id === action.payload.conversationId
-            ? { ...conv, session_id: action.payload.sessionId }
+            ? { ...conv, session_id: action.payload.sessionId, thread_id: action.payload.threadId }
             : conv
         ),
         currentConversation:
           state.currentConversation?.id === action.payload.conversationId
-            ? { ...state.currentConversation, session_id: action.payload.sessionId }
+            ? { ...state.currentConversation, session_id: action.payload.sessionId, thread_id: action.payload.threadId }
             : state.currentConversation,
       };
 

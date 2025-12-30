@@ -173,8 +173,9 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
     }
 
     const backendSessionId = state.currentSessionId;
-    // If currentConversation.id matches state.currentThreadId, it's an existing thread
-    const backendThreadId = currentConversation?.id === state.currentThreadId ? state.currentThreadId : 'new';
+
+    // Use the thread_id stored in the conversation, or fallback to global state, or 'new'
+    const backendThreadId = currentConversation?.thread_id || state.currentThreadId || 'new';
 
     // Add user message
     const userMessage: Message = {
@@ -237,7 +238,8 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
             }
           });
         },
-        assistantMessageId
+        assistantMessageId,
+        appId
       );
     } catch (err) {
       console.error('Error streaming message:', err);

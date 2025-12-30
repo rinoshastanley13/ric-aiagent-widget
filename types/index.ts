@@ -16,6 +16,7 @@ export interface FileAttachment {
 
 export interface Conversation {
   id: string; // Map to thread_id
+  thread_id?: string;
   session_id: string;
   title: string;
   createdAt: Date;
