@@ -49,7 +49,7 @@ function WidgetContent() {
             }
 
             try {
-                const API_BASE_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || 'http://106.51.109.172:5500';
+                const API_BASE_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || 'http://106.51.109.172';
                 const response = await fetch(`${API_BASE_URL}/api/widget/validate?key=${key}&id=${id}`);
                 if (response.ok) {
                     const data = await response.json();
