@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     try {
         // Call FastAPI backend to validate widget key
-        const fastApiUrl = process.env.CHAT_API_INTERNAL_URL || process.env.NEXT_PUBLIC_CHAT_API_URL || 'http://localhost:8000';
+        const fastApiUrl = process.env.CHAT_API_INTERNAL_URL || process.env.NEXT_PUBLIC_CHAT_API_URL || 'http://106.51.109.172';
         const validateUrl = `${fastApiUrl}/api/widget/validate?key=${encodeURIComponent(key)}`;
 
         const response = await fetch(validateUrl, {
