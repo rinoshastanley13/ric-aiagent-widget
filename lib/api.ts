@@ -21,7 +21,8 @@ export class ChatAPI {
     threadId: string | null,
     isNewChat: boolean = false,
     apiKey: string,
-    provider: string = 'botpress'
+    provider: string = 'botpress',
+    appId?: string
   ): Promise<void> {
     try {
       const payload = {
@@ -30,7 +31,8 @@ export class ChatAPI {
         session_id: !sessionId || sessionId === 'new' ? 'new' : sessionId,
         thread_id: !threadId || threadId === 'new' ? 'new' : threadId,
         is_new_chat: isNewChat,
-        provider: provider
+        provider: provider,
+        app_id: appId
       };
 
       const response = await fetch(`${API_BASE_URL}/chat`, {
