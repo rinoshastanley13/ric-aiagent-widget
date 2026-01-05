@@ -326,7 +326,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
           style={isUser ? {
             background: 'linear-gradient(90deg, #22c55e, #1d549f)',
             color: 'white',
-            borderRadius: '2px',
+            borderRadius: '12px',
             borderBottomRightRadius: '0px',
             fontSize: '14px',
             lineHeight: '1.5'
@@ -334,7 +334,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
             background: 'white',
             color: '#2f3a4a',
             border: '1px solid #c1c2c4',
-            borderRadius: '2px',
+            borderRadius: '12px',
             borderBottomLeftRadius: '0px',
             boxShadow: '0 6px 18px rgba(0, 0, 0, 0.06)',
             fontSize: '14px',

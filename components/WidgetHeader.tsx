@@ -28,7 +28,7 @@ export const WidgetHeader: React.FC<WidgetHeaderProps> = ({
                 padding: '12px 20px',
                 background: 'linear-gradient(135deg, #20973b, #1d549f)',
                 color: 'white',
-                borderRadius: '2px 2px 0px 0px',
+                borderRadius: '0px',
                 minHeight: '68px'
             }}
         >

@@ -151,7 +151,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             background: '#f8fafc',
             border: '2px solid #e2e8f0',
             borderRadius: '2px',
-            padding: '8px 12px',
+            padding: '10px 12px',
             transition: 'border-color 0.3s ease'
           }}
         >
@@ -168,7 +168,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               border: 'none',
               fontSize: '14px',
               color: '#1e293b',
-              minHeight: '32px',
+              minHeight: '24px',
               maxHeight: '144px',
               overflowY: textareaRows >= 6 ? 'auto' : 'hidden'
             }}

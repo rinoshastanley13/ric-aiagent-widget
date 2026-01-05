@@ -46,7 +46,7 @@ export const PromptSuggestions: React.FC<PromptSuggestionsProps> = ({ onPromptSe
                 <button
                   key={prompt.id}
                   onClick={() => onPromptSelect(prompt)}
-                  className="flex-shrink-0 w-64 p-3 rounded-sm border border-blue-300 hover:border-blue-400 hover:bg-white transition-all duration-200 text-left group hover:shadow-md bg-blue-100"
+                  className="flex-shrink-0 w-64 p-3 rounded-xl border-2 border-blue-400 hover:border-blue-500 hover:bg-white transition-all duration-200 text-left group shadow-sm hover:shadow-lg bg-blue-100"
                 >
                   <div className="flex items-start gap-3">
                     <div className="text-2xl mt-1">{prompt.icon}</div>
@@ -74,7 +74,7 @@ export const PromptSuggestions: React.FC<PromptSuggestionsProps> = ({ onPromptSe
                 <button
                   key={prompt.id}
                   onClick={() => onPromptSelect(prompt)}
-                  className="flex-shrink-0 w-64 p-3 rounded-sm border border-green-300 hover:border-green-400 hover:bg-white transition-all duration-200 text-left group hover:shadow-md bg-green-100"
+                  className="flex-shrink-0 w-64 p-3 rounded-xl border-2 border-green-400 hover:border-green-500 hover:bg-white transition-all duration-200 text-left group shadow-sm hover:shadow-lg bg-green-100"
                 >
                   <div className="flex items-start gap-3">
                     <div className="text-2xl mt-1">{prompt.icon}</div>
@@ -102,7 +102,7 @@ export const PromptSuggestions: React.FC<PromptSuggestionsProps> = ({ onPromptSe
                 <button
                   key={prompt.id}
                   onClick={() => onPromptSelect(prompt)}
-                  className="flex-shrink-0 w-64 p-3 rounded-sm border border-yellow-300 hover:border-yellow-400 hover:bg-white transition-all duration-200 text-left group hover:shadow-md bg-yellow-50"
+                  className="flex-shrink-0 w-64 p-3 rounded-xl border-2 border-yellow-400 hover:border-yellow-500 hover:bg-white transition-all duration-200 text-left group shadow-sm hover:shadow-lg bg-yellow-50"
                 >
                   <div className="flex items-start gap-3">
                     <div className="text-2xl mt-1">{prompt.icon}</div>
