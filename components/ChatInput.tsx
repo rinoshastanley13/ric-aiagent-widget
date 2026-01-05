@@ -56,7 +56,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
-        textareaRef.current.style.height = '48px';
+        textareaRef.current.style.height = '24px';
       }
     }
   };
