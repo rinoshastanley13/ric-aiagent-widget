@@ -56,7 +56,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
-        textareaRef.current.style.height = '48px';
+        textareaRef.current.style.height = '24px';
       }
     }
   };
@@ -160,7 +160,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             value={message}
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
-            placeholder={disabled ? "AI is thinking..." : "Ask your query"}
+            placeholder={disabled ? "AI is thinking.." : "Ask your query"}
             disabled={disabled}
             rows={1}
             className="flex-1 resize-none bg-transparent outline-none disabled:cursor-not-allowed"
