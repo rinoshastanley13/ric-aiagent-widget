@@ -33,15 +33,34 @@
     var container = document.createElement('div');
     container.id = 'ric-chat-widget-container';
     container.style.position = 'fixed';
-    container.style.bottom = '20px';
-    container.style.right = '20px';
-    container.style.width = '480px';
-    container.style.height = '600px';
     container.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-    container.style.borderRadius = '50px';
     container.style.overflow = 'hidden';
     container.style.zIndex = '999999';
-    container.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    container.style.transition = 'opacity 0.3s ease, transform 0.3s ease, width 0.3s ease, height 0.3s ease, border-radius 0.3s ease, bottom 0.3s ease, right 0.3s ease';
+
+    function updateWidgetStyles() {
+        var isMobile = window.innerWidth <= 480;
+
+        if (isMobile) {
+            container.style.width = '100%';
+            container.style.height = '100%';
+            container.style.bottom = '0px';
+            container.style.right = '0px';
+            container.style.borderRadius = '0px';
+        } else {
+            container.style.width = '480px';
+            container.style.height = '600px';
+            container.style.bottom = '20px';
+            container.style.right = '20px';
+            container.style.borderRadius = '30px';
+        }
+    }
+
+    // Initial styles
+    updateWidgetStyles();
+
+    // Responsive listener
+    window.addEventListener('resize', updateWidgetStyles);
     // Start hidden or minimized? For now, let's just show it.
     // Real implementation might start as a "bubble" launcher.
 

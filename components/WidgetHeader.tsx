@@ -25,11 +25,11 @@ export const WidgetHeader: React.FC<WidgetHeaderProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '16px 20px',
+                padding: '12px 20px',
                 background: 'linear-gradient(135deg, #20973b, #1d549f)',
                 color: 'white',
-                borderRadius: '30px 30px 0px 0px',
-                minHeight: '72px'
+                borderRadius: '0px',
+                minHeight: '68px'
             }}
         >
             <div className="flex items-center gap-3">

@@ -150,8 +150,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             gap: '12px',
             background: '#f8fafc',
             border: '2px solid #e2e8f0',
-            borderRadius: '24px',
-            padding: '8px 12px',
+            borderRadius: '2px',
+            padding: '10px 12px',
             transition: 'border-color 0.3s ease'
           }}
         >
@@ -168,7 +168,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               border: 'none',
               fontSize: '14px',
               color: '#1e293b',
-              minHeight: '32px',
+              minHeight: '24px',
               maxHeight: '144px',
               overflowY: textareaRows >= 6 ? 'auto' : 'hidden'
             }}
@@ -188,12 +188,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           disabled={!message.trim() || disabled}
           className="flex-shrink-0 rounded-full flex items-center justify-center transition-all"
           style={{
-            width: '36px',
-            height: '36px',
+            width: '48px',
+            height: '48px',
             background: disabled || !message.trim() ? '#cbd5e1' : '#1e3a8a',
             border: 'none',
             color: 'white',
-            cursor: disabled || !message.trim() ? 'not-allowed' : 'pointer'
+            cursor: disabled || !message.trim() ? 'not-allowed' : 'pointer',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
           }}
           onMouseEnter={(e) => {
             if (!disabled && message.trim()) {
@@ -208,7 +209,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             }
           }}
         >
-          <span style={{ fontSize: '20px', lineHeight: 1 }}>↑</span>
+          <span style={{ fontSize: '24px', lineHeight: 1 }}>↑</span>
         </button>
       </form>
     </div>

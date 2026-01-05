@@ -39,7 +39,7 @@ export const ChoiceButtons: React.FC<ChoiceButtonsProps> = ({ choices, onSelect 
                         padding: '14px 18px',
                         background: 'linear-gradient(180deg, #ffffff, #f6f8fb)',
                         border: hoveredIndex === index ? '1px solid #20973b' : '1px solid #e3e7ee',
-                        borderRadius: '14px',
+                        borderRadius: '2px',
                         color: '#1f2937',
                         cursor: 'pointer',
                         fontSize: '14px',

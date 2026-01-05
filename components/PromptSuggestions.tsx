@@ -8,7 +8,7 @@ const promptCategories: { [key: string]: PromptTemplate[] } = {
     { id: '1', title: 'Updates Applicable', category: 'compliance', content: 'In the context of Daily Updates from the regulatory bodies, list down all tax related \n amendments happened since 5 years.', icon: '📄' },
     { id: '2', title: 'Labor Laws Update', category: 'compliance', content: 'Explain GST Act provisions...', icon: '💰' },
     { id: '3', title: 'Corporate Tax Act', category: 'compliance', content: 'Corporate tax guidelines...', icon: '🏢' },
-    { id: '4', title: 'Income Tax Act', category: 'compliance', content: 'Details about Income Tax Act...', icon: '💵' }, 
+    { id: '4', title: 'Income Tax Act', category: 'compliance', content: 'Details about Income Tax Act...', icon: '💵' },
     { id: '5', title: 'Labor Laws', category: 'compliance', content: 'Overview of Labor Laws...', icon: '👷' },
   ],
   actions: [
@@ -39,14 +39,14 @@ export const PromptSuggestions: React.FC<PromptSuggestionsProps> = ({ onPromptSe
     <div className="flex-1 overflow-y-auto p-4">
       <div className="max-w-4xl mx-auto space-y-4">
         {/* Compliance Prompts */}
-        <div className="bg-blue-50 rounded-xl p-4 border-2 border-white shadow-lg ring-2 ring-blue-100 ring-inset">
+        <div className="bg-blue-50 rounded-sm p-4 border-2 border-white shadow-lg ring-2 ring-blue-100 ring-inset">
           <div className="relative">
             <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
               {promptCategories.compliance.map(prompt => (
                 <button
                   key={prompt.id}
                   onClick={() => onPromptSelect(prompt)}
-                  className="flex-shrink-0 w-64 p-3 rounded-lg border border-blue-300 hover:border-blue-400 hover:bg-white transition-all duration-200 text-left group hover:shadow-md bg-blue-100"
+                  className="flex-shrink-0 w-64 p-3 rounded-xl border-2 border-blue-400 hover:border-blue-500 hover:bg-white transition-all duration-200 text-left group shadow-sm hover:shadow-lg bg-blue-100"
                 >
                   <div className="flex items-start gap-3">
                     <div className="text-2xl mt-1">{prompt.icon}</div>
@@ -67,14 +67,14 @@ export const PromptSuggestions: React.FC<PromptSuggestionsProps> = ({ onPromptSe
         </div>
 
         {/* My Actions */}
-        <div className="bg-green-50 rounded-xl p-4 border-2 border-white shadow-lg ring-2 ring-blue-100 ring-inset">
+        <div className="bg-green-50 rounded-sm p-4 border-2 border-white shadow-lg ring-2 ring-blue-100 ring-inset">
           <div className="relative">
             <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
               {promptCategories.actions.map(prompt => (
                 <button
                   key={prompt.id}
                   onClick={() => onPromptSelect(prompt)}
-                  className="flex-shrink-0 w-64 p-3 rounded-lg border border-green-300 hover:border-green-400 hover:bg-white transition-all duration-200 text-left group hover:shadow-md bg-green-100"
+                  className="flex-shrink-0 w-64 p-3 rounded-xl border-2 border-green-400 hover:border-green-500 hover:bg-white transition-all duration-200 text-left group shadow-sm hover:shadow-lg bg-green-100"
                 >
                   <div className="flex items-start gap-3">
                     <div className="text-2xl mt-1">{prompt.icon}</div>
@@ -95,14 +95,14 @@ export const PromptSuggestions: React.FC<PromptSuggestionsProps> = ({ onPromptSe
         </div>
 
         {/* General */}
-        <div className="bg-yellow-50 rounded-xl p-4 border-2 border-white shadow-lg ring-2 ring-blue-100 ring-inset">
+        <div className="bg-yellow-50 rounded-sm p-4 border-2 border-white shadow-lg ring-2 ring-blue-100 ring-inset">
           <div className="relative">
             <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
               {promptCategories.general.map(prompt => (
                 <button
                   key={prompt.id}
                   onClick={() => onPromptSelect(prompt)}
-                  className="flex-shrink-0 w-64 p-3 rounded-lg border border-yellow-300 hover:border-yellow-400 hover:bg-white transition-all duration-200 text-left group hover:shadow-md bg-yellow-50"
+                  className="flex-shrink-0 w-64 p-3 rounded-xl border-2 border-yellow-400 hover:border-yellow-500 hover:bg-white transition-all duration-200 text-left group shadow-sm hover:shadow-lg bg-yellow-50"
                 >
                   <div className="flex items-start gap-3">
                     <div className="text-2xl mt-1">{prompt.icon}</div>

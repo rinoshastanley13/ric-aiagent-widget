@@ -287,18 +287,11 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
         flexDirection: 'column',
         height: '100%',
         background: '#f8fafc',
-        borderRadius: '30px'
+        borderRadius: '0px'
       }}
     >
       <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '24px',
-          background: '#f8fafc',
-          borderRadius: '30px'
-        }}
-        className="hide-scrollbar"
+        className="hide-scrollbar flex-1 overflow-y-auto p-4 md:p-6 bg-[#f8fafc] rounded-none"
       >
         {!shouldShowMessages ? (
           <PromptSuggestions onPromptSelect={handlePromptSelect} />
@@ -322,7 +315,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
           padding: '16px 20px',
           background: 'white',
           borderTop: '1px solid #e2e8f0',
-          borderRadius: '0px 0px 30px 30px'
+          borderRadius: '0px'
         }}
       >
         <ChatInput
@@ -332,6 +325,6 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
           onInputChange={setInputValue}
         />
       </div>
-    </div>
+    </div >
   );
 };
