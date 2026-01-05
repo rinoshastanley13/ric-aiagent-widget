@@ -170,18 +170,16 @@ function WidgetContent() {
 
                 {viewState === 'CHAT' && (
                     <>
-                        <WidgetHeader showNewChat={true} onNewChat={handleNewChat} />
-                        <div className="flex-1 overflow-hidden relative">
-                            <ChatProvider>
-                                <div className="h-full flex flex-col">
-                                    <ChatAgent
-                                        apiKey={context?.app_unique_key || ''}
-                                        appId={context?.app_id || ''}
-                                        provider="botpress"
-                                    />
-                                </div>
-                            </ChatProvider>
-                        </div>
+                        <ChatProvider>
+                            <WidgetHeader showNewChat={true} onNewChat={handleNewChat} />
+                            <div className="flex-1 overflow-hidden relative h-full flex flex-col">
+                                <ChatAgent
+                                    apiKey={context?.app_unique_key || ''}
+                                    appId={context?.app_id || ''}
+                                    provider="botpress"
+                                />
+                            </div>
+                        </ChatProvider>
                     </>
                 )}
             </div>

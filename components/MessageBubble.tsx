@@ -326,16 +326,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
           style={isUser ? {
             background: 'linear-gradient(90deg, #22c55e, #1d549f)',
             color: 'white',
-            borderRadius: '12px',
-            borderBottomRightRadius: '4px',
+            borderRadius: '2px',
+            borderBottomRightRadius: '0px',
             fontSize: '14px',
             lineHeight: '1.5'
           } : {
             background: 'white',
             color: '#2f3a4a',
             border: '1px solid #c1c2c4',
-            borderRadius: '12px',
-            borderBottomLeftRadius: '4px',
+            borderRadius: '2px',
+            borderBottomLeftRadius: '0px',
             boxShadow: '0 6px 18px rgba(0, 0, 0, 0.06)',
             fontSize: '14px',
             lineHeight: '1.5'
@@ -350,7 +350,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
-              <span className="text-sm text-blue-700 ml-2 font-medium">AI is thinking...</span>
+
             </div>
           )}
 

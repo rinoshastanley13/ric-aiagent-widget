@@ -287,7 +287,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
         flexDirection: 'column',
         height: '100%',
         background: '#f8fafc',
-        borderRadius: '30px'
+        borderRadius: '2px'
       }}
     >
       <div
@@ -296,7 +296,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
           overflowY: 'auto',
           padding: '24px',
           background: '#f8fafc',
-          borderRadius: '30px'
+          borderRadius: '2px'
         }}
         className="hide-scrollbar"
       >
@@ -322,7 +322,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
           padding: '16px 20px',
           background: 'white',
           borderTop: '1px solid #e2e8f0',
-          borderRadius: '0px 0px 30px 30px'
+          borderRadius: '0px 0px 2px 2px'
         }}
       >
         <ChatInput
