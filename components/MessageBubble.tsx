@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -10,7 +10,6 @@ import { Message } from '@/types';
 import { FileText } from "lucide-react";
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw'; // Add this import
-import DOMPurify from 'dompurify';
 import { ChoiceButtons } from './ChoiceButtons';
 
 interface MessageBubbleProps {
@@ -21,7 +20,7 @@ interface MessageBubbleProps {
 }
 
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming = false, onChoiceSelect }) => {
+const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({ message, isStreaming = false, onChoiceSelect }) => {
   const isUser = message.role === 'user';
 
   // Add state for feedback in your component
@@ -33,103 +32,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
     console.log(`User gave ${type} feedback for message:`, message.id);
   };
 
-  // Function to detect if content contains HTML
-  const containsHTML = (content: string) => {
-    //return /<[^>]*>/.test(content);
-
-    // Check for common HTML patterns
-    /*
-    const htmlPatterns = [
-      // Opening tags (with optional attributes)
-      /<([a-z][a-z0-9]*)\b[^>]*>/i,
-      // Closing tags
-      /<\/([a-z][a-z0-9]*)\b[^>]*>/i,
-      // Self-closing tags
-      /<([a-z][a-z0-9]*)\b[^>]*\/>/i,
-      // HTML comments
-      /<!--[\s\S]*?-->/,
-      // HTML entities (though these might appear in plain text too)
-      /&[a-z]+;/i,
-      // DOCTYPE declaration
-      /<!DOCTYPE\s+html/i
-    ];
-
-    // Check for any HTML pattern
-    return htmlPatterns.some(pattern => pattern.test(content));
-    */
-    return false;
-  };
-
-  // Shadow DOM Component
-  const ShadowDOMRenderer = ({ html }: { html: string }) => {
-    const shadowHostRef = useRef<HTMLDivElement>(null);
-    const [isLoaded, setIsLoaded] = useState(false);
-
-    useLayoutEffect(() => {
-      if (shadowHostRef.current && !shadowHostRef.current.shadowRoot) {
-        const shadowRoot = shadowHostRef.current.attachShadow({ mode: 'open' });
-
-        // Add basic styles for better appearance
-        const style = document.createElement('style');
-        style.textContent = `
-          :host {
-            display: block;
-            width: 100%;
-            min-height: 200px;
-          }
-          body, html {
-            margin: 0;
-            padding: 0;
-            font-family: system-ui, sans-serif;
-            height: 100%;
-          }
-          * {
-            box-sizing: border-box;
-          }
-        `;
-
-        shadowRoot.appendChild(style);
-
-        // Create a container for the content
-        const container = document.createElement('div');
-        container.innerHTML = html;
-        shadowRoot.appendChild(container);
-
-        // Mark as loaded to trigger any animations/transitions
-        setTimeout(() => setIsLoaded(true), 50);
-      }
-    }, [html]);
-
-    return (
-      <div
-        ref={shadowHostRef}
-        className={`w-full min-h-[200px] transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-      />
-    );
-  };
-
-  // Function to render HTML content safely
-  const renderHTMLContent = (content: string) => {
-    if (containsHTML(content)) {
-      const sanitizedContent = DOMPurify.sanitize(content, {
-        ADD_TAGS: ['iframe', 'script'],
-        ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
-      });
-
-      return (
-        <div className="html-content-container my-4 p-4 border border-gray-300 rounded-lg bg-white">
-          <div className="text-xs text-gray-500 mb-2 font-medium">
-            HTML Content Preview
-          </div>
-          <div className="relative min-h-[200px]">
-            <ShadowDOMRenderer html={sanitizedContent} />
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
 
   // Custom components for ReactMarkdown with enhanced styling
   const MarkdownComponents = {
@@ -342,15 +244,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
           }}
         >
 
-          {/* Streaming indicator */}
-          {isStreaming && !isUser && (
-            <div className="flex items-center mb-3 bg-blue-50 rounded-lg px-3 py-2 border border-blue-200">
+          {/* Streaming indicator - only show when content is empty */}
+          {isStreaming && !isUser && !message.content && (
+            <div className="flex items-center space-x-2 text-gray-500">
               <div className="flex space-x-1">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
-
+              <span className="text-sm">Thinking...</span>
             </div>
           )}
 
@@ -376,18 +278,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
                 {message.content}
               </div>
             ) : (
-              <>
-                {/* Try to render as HTML first, fallback to markdown */}
-                {renderHTMLContent(message.content) || (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]} // Add rehypeRaw here
-                    components={MarkdownComponents}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
-                )}
-              </>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw]}
+                  components={MarkdownComponents}
+                >
+                  {message.content}
+                </ReactMarkdown>
             )}
           </div>
 
@@ -434,3 +331,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
     </div>
   );
 };
+
+// Wrap with React.memo to prevent unnecessary re-renders during streaming
+export const MessageBubble = React.memo(MessageBubbleComponent, (prevProps, nextProps) => {
+  // Only re-render if message content, streaming status, or choices change
+  return (
+    prevProps.message.content === nextProps.message.content &&
+    prevProps.isStreaming === nextProps.isStreaming &&
+    JSON.stringify(prevProps.message.choices) === JSON.stringify(nextProps.message.choices)
+  );
+});

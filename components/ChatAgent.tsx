@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
-import { PromptSuggestions } from './PromptSuggestions';
+import { AILoader } from './AILoader';
 import { useChat } from '@/context/ChatContext';
 import { useChatStream } from '@/hooks/useChatStream';
 import { Message, FileAttachment, PromptTemplate } from '@/types';
@@ -291,7 +291,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
     );
 
     if (isAIAssistantChoice) {
-      console.log('AI Assistant choice detected, switching provider to ollama');
+      console.log('AI Assistant choice detected, switching provider to openai');
 
       // Add transition message
       if (currentConversation) {
@@ -355,13 +355,13 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         borderRadius: '0px'
       }}
     >
-      <div
-        className="hide-scrollbar flex-1 overflow-y-auto p-4 md:p-6 bg-[#f8fafc] rounded-none"
-      >
-        {!shouldShowMessages ? (
-          <PromptSuggestions onPromptSelect={handlePromptSelect} />
-        ) : (
-          <div>
+        <div
+          className="hide-scrollbar flex-1 overflow-y-auto p-4 md:p-6 bg-[#f8fafc] rounded-none"
+        >
+          {!shouldShowMessages ? (
+            <AILoader />
+          ) : (
+            <div>
             {currentConversation?.messages?.map((message, index) => (
               <MessageBubble
                 key={message.id || index}
