@@ -176,7 +176,6 @@ function WidgetContent() {
                                 <ChatAgent
                                     apiKey={context?.app_unique_key || ''}
                                     appId={context?.app_id || ''}
-                                    provider="botpress"
                                 />
                             </div>
                         </ChatProvider>

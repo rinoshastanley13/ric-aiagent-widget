@@ -10,6 +10,7 @@ type ChatAction =
   | { type: 'ADD_MESSAGE'; payload: { conversationId: string; message: Message } }
   | { type: 'UPDATE_MESSAGE'; payload: { conversationId: string; messageId: string; content: string; choices?: Array<{ title: string; value: string }> } }
   | { type: 'SET_IDS'; payload: { sessionId: string; threadId: string; conversationId: string } }
+  | { type: 'SET_PROVIDER'; payload: string }
   | { type: 'TOGGLE_SIDEBAR' }
   | { type: 'DELETE_CONVERSATION'; payload: string }
   | { type: 'SHOW_PROMPT_SUGGESTIONS'; payload: boolean };
@@ -24,6 +25,7 @@ const initialState: ChatState = {
   currentConversation: null,
   currentThreadId: null,
   currentSessionId: null,
+  currentProvider: 'botpress',
   isStreaming: false,
   user: null,
   isSidebarCollapsed: false,
@@ -106,6 +108,9 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
             ? { ...state.currentConversation, session_id: action.payload.sessionId, thread_id: action.payload.threadId }
             : state.currentConversation,
       };
+
+    case 'SET_PROVIDER':
+      return { ...state, currentProvider: action.payload };
 
     case 'TOGGLE_SIDEBAR':
       return { ...state, isSidebarCollapsed: !state.isSidebarCollapsed };
