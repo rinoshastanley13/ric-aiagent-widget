@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
-import { PromptSuggestions } from './PromptSuggestions';
+import { AILoader } from './AILoader';
 import { useChat } from '@/context/ChatContext';
 import { useChatStream } from '@/hooks/useChatStream';
 import { Message, FileAttachment, PromptTemplate } from '@/types';
@@ -11,10 +11,10 @@ import { Message, FileAttachment, PromptTemplate } from '@/types';
 interface ChatAgentProps {
   apiKey: string;
   appId?: string;
-  provider?: string;
+  provider?: string; // Optional, defaults to context provider
 }
 
-export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 'botpress' }) => {
+export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: propProvider }) => {
   const { state, dispatch } = useChat();
   const { streamMessage, isStreaming, error } = useChatStream();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -22,6 +22,30 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
 
   const currentConversation = state.currentConversation;
   const [inputValue, setInputValue] = useState('');
+
+  // Handler for when backend signals provider switch
+  const handleProviderSwitch = useCallback((newProvider: string) => {
+    console.log(`Provider switch requested: ${state.currentProvider} -> ${newProvider}`);
+
+    // Add a system message indicating the switch
+    if (currentConversation) {
+      const transitionMessage: Message = {
+        id: Date.now().toString() + '-system',
+        content: '🤖 Switching to AI Assistant mode...',
+        role: 'assistant',
+        timestamp: new Date(),
+        files: [],
+      };
+
+      dispatch({
+        type: 'ADD_MESSAGE',
+        payload: { conversationId: currentConversation.id, message: transitionMessage },
+      });
+    }
+
+    // Update provider in context
+    dispatch({ type: 'SET_PROVIDER', payload: newProvider });
+  }, [currentConversation, dispatch, state.currentProvider]);
 
   // Memoize scrollToBottom to prevent recreating on every render
   const scrollToBottom = useCallback(() => {
@@ -106,7 +130,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
             'new', // Use 'new' for threadId within session
             true, // isNewChat (new thread)
             apiKey,
-            provider,
+            propProvider || state.currentProvider,
             (newSessionId, newThreadId) => {
               dispatch({
                 type: 'SET_IDS',
@@ -118,7 +142,8 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
               });
             },
             assistantMessageId,
-            appId
+            appId,
+            handleProviderSwitch
           );
         } catch (e) {
           console.error("Welcome message failed", e);
@@ -134,8 +159,12 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
   }, [state.user?.email, currentConversation, hasUserSentMessage, dispatch, streamMessage, state.currentSessionId]);
 
 
-  const handleSendMessage = useCallback(async (content: string, files: FileAttachment[] = []) => {
+  const handleSendMessage = useCallback(async (content: string, files: FileAttachment[] = [], overrideProvider?: string) => {
     if (!content.trim()) return;
+
+    // Debug: Log which provider we're using
+    const effectiveProvider = overrideProvider || propProvider || state.currentProvider;
+    console.log(`[ChatAgent] Sending message with provider: ${effectiveProvider} (override: ${overrideProvider}, prop: ${propProvider}, state: ${state.currentProvider})`);
 
     setHasUserSentMessage(true);
 
@@ -227,7 +256,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
         backendThreadId,
         isNewChat,
         apiKey,
-        provider,
+        overrideProvider || propProvider || state.currentProvider,
         (newSessionId, newThreadId) => {
           dispatch({
             type: 'SET_IDS',
@@ -239,7 +268,8 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
           });
         },
         assistantMessageId,
-        appId
+        appId,
+        handleProviderSwitch
       );
     } catch (err) {
       console.error('Error streaming message:', err);
@@ -252,10 +282,45 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
         },
       });
     }
-  }, [currentConversation, dispatch, streamMessage, state.currentSessionId, state.currentThreadId, state.user?.email]);
+  }, [currentConversation, dispatch, streamMessage, state.currentSessionId, state.currentThreadId, state.user?.email, state.currentProvider, propProvider, handleProviderSwitch]);
 
   const handleChoiceSelect = useCallback(async (value: string, messageId: string) => {
-    await handleSendMessage(value);
+    // Check if this is an AI Assistant choice
+    const isAIAssistantChoice = ['AI_ASSISTANT', 'ASK_AI', 'ASK_RICA', 'TALK_AI'].includes(
+      value.toUpperCase()
+    );
+
+    if (isAIAssistantChoice) {
+      console.log('AI Assistant choice detected, switching provider to openai');
+
+      // Add transition message
+      if (currentConversation) {
+        const transitionMessage: Message = {
+          id: Date.now().toString() + '-transition',
+          content: '🤖 Switching to AI Assistant mode...',
+          role: 'assistant',
+          timestamp: new Date(),
+          files: [],
+        };
+
+        dispatch({
+          type: 'ADD_MESSAGE',
+          payload: { conversationId: currentConversation.id, message: transitionMessage },
+        });
+      }
+
+      // Switch provider immediately
+      dispatch({ type: 'SET_PROVIDER', payload: 'openai' });
+
+      // Small delay to let UI update
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Send message with openai provider
+      await handleSendMessage(value, [], 'openai');
+    } else {
+      // Regular choice - use current provider
+      await handleSendMessage(value);
+    }
 
     if (currentConversation) {
       const msg = currentConversation.messages.find(m => m.id === messageId);
@@ -290,13 +355,13 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider = 
         borderRadius: '0px'
       }}
     >
-      <div
-        className="hide-scrollbar flex-1 overflow-y-auto p-4 md:p-6 bg-[#f8fafc] rounded-none"
-      >
-        {!shouldShowMessages ? (
-          <PromptSuggestions onPromptSelect={handlePromptSelect} />
-        ) : (
-          <div>
+        <div
+          className="hide-scrollbar flex-1 overflow-y-auto p-4 md:p-6 bg-[#f8fafc] rounded-none"
+        >
+          {!shouldShowMessages ? (
+            <AILoader />
+          ) : (
+            <div>
             {currentConversation?.messages?.map((message, index) => (
               <MessageBubble
                 key={message.id || index}

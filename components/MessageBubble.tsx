@@ -18,10 +18,16 @@ interface MessageBubbleProps {
   isStreaming?: boolean;
   feedback?: 'thumbsUp' | 'thumbsDown' | null;
   onChoiceSelect?: (value: string) => void;
+  allowHtml?: boolean;
 }
 
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming = false, onChoiceSelect }) => {
+const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({ 
+  message, 
+  isStreaming = false, 
+  onChoiceSelect,
+  allowHtml = false 
+}) => {
   const isUser = message.role === 'user';
 
   // Add state for feedback in your component
@@ -111,7 +117,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
 
   // Function to render HTML content safely
   const renderHTMLContent = (content: string) => {
-    if (containsHTML(content)) {
+    // Only verify HTML if explicitly allowed
+    if (allowHtml && containsHTML(content)) {
       const sanitizedContent = DOMPurify.sanitize(content, {
         ADD_TAGS: ['iframe', 'script'],
         ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
@@ -131,8 +138,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
     return null;
   };
 
-  // Custom components for ReactMarkdown with enhanced styling
-  const MarkdownComponents = {
+  // Custom components for ReactMarkdown with enhanced styling - Memoized to prevent re-renders
+  const MarkdownComponents = React.useMemo(() => ({
     // Code blocks with syntax highlighting
     code: ({ node, inline, className, children, ...props }: any) => {
       const match = /language-(\w+)/.exec(className || '');
@@ -313,7 +320,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
     hr: () => (
       <hr className="my-6 border-gray-300" />
     ),
-  };
+  }), [isUser]);
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -342,15 +349,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
           }}
         >
 
-          {/* Streaming indicator */}
-          {isStreaming && !isUser && (
+          {/* Streaming indicator - Only show when thinking (no content yet) */}
+          {isStreaming && !isUser && !message.content && (
             <div className="flex items-center mb-3 bg-blue-50 rounded-lg px-3 py-2 border border-blue-200">
               <div className="flex space-x-1">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
-
             </div>
           )}
 
@@ -434,3 +440,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
     </div>
   );
 };
+// Wrap with React.memo to prevent unnecessary re-renders during streaming
+export const MessageBubble = React.memo(MessageBubbleComponent, (prevProps, nextProps) => {
+  // Only re-render if message content, streaming status, or choices change
+  return (
+    prevProps.message.content === nextProps.message.content &&
+    prevProps.isStreaming === nextProps.isStreaming &&
+    JSON.stringify(prevProps.message.choices) === JSON.stringify(nextProps.message.choices)
+  );
+});

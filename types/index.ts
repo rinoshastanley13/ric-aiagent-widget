@@ -45,6 +45,7 @@ export interface ChatState {
   currentConversation: Conversation | null;
   currentThreadId: string | null;
   currentSessionId: string | null;
+  currentProvider: string;
   isStreaming: boolean;
   user: User | null;
   isSidebarCollapsed: boolean;

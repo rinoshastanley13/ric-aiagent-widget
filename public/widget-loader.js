@@ -52,7 +52,7 @@
             container.style.height = '600px';
             container.style.bottom = '20px';
             container.style.right = '20px';
-            container.style.borderRadius = '30px';
+            container.style.borderRadius = '20px';
         }
     }
 

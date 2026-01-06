@@ -19,7 +19,8 @@ export const useChatStream = () => {
     provider: string = 'botpress',
     onIdsUpdate?: (sessionId: string, threadId: string) => void,
     messageId?: string,
-    appId?: string
+    appId?: string,
+    onProviderSwitch?: (newProvider: string) => void
   ) => {
     setIsStreaming(true);
     setError(null);
@@ -80,6 +81,19 @@ export const useChatStream = () => {
                 if ((parsed.session_id || parsed.thread_id) && onIdsUpdate) {
                   onIdsUpdate(parsed.session_id || '', parsed.thread_id || '');
                 }
+              }
+            }
+            // Handle __SWITCH_PROVIDER__ marker
+            else if (line.includes('__SWITCH_PROVIDER__') && line.includes('__END_SWITCH__')) {
+              const startMarker = '__SWITCH_PROVIDER__';
+              const endMarker = '__END_SWITCH__';
+              const startIdx = line.indexOf(startMarker) + startMarker.length;
+              const endIdx = line.indexOf(endMarker);
+              const newProvider = line.substring(startIdx, endIdx);
+
+              if (newProvider && onProviderSwitch) {
+                console.log(`Switching provider to: ${newProvider}`);
+                onProviderSwitch(newProvider);
               }
             }
           } catch (err) {
