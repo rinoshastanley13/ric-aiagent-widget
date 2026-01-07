@@ -12,6 +12,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw'; // Add this import
 import DOMPurify from 'dompurify';
 import { ChoiceButtons } from './ChoiceButtons';
+import { ActsList } from './ActsList';
 
 interface MessageBubbleProps {
   message: Message;
@@ -22,6 +23,7 @@ interface MessageBubbleProps {
 
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming = false, onChoiceSelect }) => {
+  if (message.acts) console.log('🚀 [MessageBubble] Rendering acts for message:', message.id, message.acts);
   const isUser = message.role === 'user';
 
   // Add state for feedback in your component
@@ -397,6 +399,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreami
               choices={message.choices!}
               onSelect={onChoiceSelect}
             />
+          )}
+
+          {/* Acts List */}
+          {!isUser && message.acts && (
+            <ActsList data={message.acts} />
           )}
 
           {/* Timestamp */}

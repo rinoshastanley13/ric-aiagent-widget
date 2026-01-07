@@ -122,6 +122,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
                   messageId: assistantMessageId,
                   content: assistantMessage.content,
                   choices: assistantMessage.choices,
+                  acts: assistantMessage.acts,
                 },
               });
             },
@@ -241,6 +242,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         content,
         files,
         (assistantMessage: Message) => {
+          if (assistantMessage.acts) console.log('🚀 [ChatAgent] Dispatching UPDATE_MESSAGE with acts:', assistantMessage.acts);
           dispatch({
             type: 'UPDATE_MESSAGE',
             payload: {
@@ -248,6 +250,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
               messageId: assistantMessageId,
               content: assistantMessage.content,
               choices: assistantMessage.choices,
+              acts: assistantMessage.acts,
             },
           });
         },
@@ -318,7 +321,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
       // Send message with openai provider
       await handleSendMessage(value, [], 'openai');
     } else {
-      // Regular choice - use current provider
+      // Regular choice - send as plain text
       await handleSendMessage(value);
     }
 

@@ -1,14 +1,15 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { ChatState, Conversation, Message, User, PromptTemplate } from '@/types';
+import { ChatState, Conversation, Message, User, PromptTemplate, ActsData } from '@/types';
 
 type ChatAction =
   | { type: 'SET_USER'; payload: User | null }
   | { type: 'ADD_CONVERSATION'; payload: Conversation }
   | { type: 'SET_CURRENT_CONVERSATION'; payload: Conversation | null }
   | { type: 'ADD_MESSAGE'; payload: { conversationId: string; message: Message } }
-  | { type: 'UPDATE_MESSAGE'; payload: { conversationId: string; messageId: string; content: string; choices?: Array<{ title: string; value: string }> } }
+  | { type: 'UPDATE_MESSAGE'; payload: { conversationId: string; messageId: string; content: string; choices?: Array<{ title: string; value: string }>; acts?: ActsData } }
+  | { type: 'SET_IDS'; payload: { sessionId: string; threadId: string; conversationId: string } }
   | { type: 'SET_IDS'; payload: { sessionId: string; threadId: string; conversationId: string } }
   | { type: 'SET_PROVIDER'; payload: string }
   | { type: 'TOGGLE_SIDEBAR' }
@@ -66,6 +67,7 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
       };
 
     case 'UPDATE_MESSAGE':
+      if (action.payload.acts) console.log('🚀 [ChatReducer] Updating message with acts:', action.payload.acts);
       return {
         ...state,
         conversations: state.conversations.map(conv =>
@@ -74,7 +76,7 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
               ...conv,
               messages: conv.messages.map(msg =>
                 msg.id === action.payload.messageId
-                  ? { ...msg, content: action.payload.content, ...(action.payload.choices && { choices: action.payload.choices }) }
+                  ? { ...msg, content: action.payload.content, ...(action.payload.choices && { choices: action.payload.choices }), ...(action.payload.acts && { acts: action.payload.acts }) }
                   : msg
               ),
             }
@@ -86,7 +88,7 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
               ...state.currentConversation,
               messages: state.currentConversation.messages.map(msg =>
                 msg.id === action.payload.messageId
-                  ? { ...msg, content: action.payload.content, ...(action.payload.choices && { choices: action.payload.choices }) }
+                  ? { ...msg, content: action.payload.content, ...(action.payload.choices && { choices: action.payload.choices }), ...(action.payload.acts && { acts: action.payload.acts }) }
                   : msg
               ),
             }
