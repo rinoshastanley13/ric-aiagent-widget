@@ -5,6 +5,7 @@ FROM node:20-alpine AS base
 FROM base AS builder
 WORKDIR /app
 COPY package*.json ./
+RUN npm config set registry https://registry.npmmirror.com/
 RUN npm install
 COPY . .
 ARG NEXT_PUBLIC_CHAT_API_URL
@@ -45,4 +46,7 @@ ENV HOSTNAME="0.0.0.0"
 
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/next-config-js/output
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:4000/ || exit 1
+
 CMD ["node", "server.js"]
