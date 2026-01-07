@@ -73,6 +73,15 @@ export const useChatStream = () => {
                   }
                 }
 
+                // Extract acts if present
+                if (parsed.acts) {
+                  console.log('🚀 [useChatStream] FRONTEND RECEIVED ACTS:', parsed.acts);
+                  if (currentMessageRef.current) {
+                    currentMessageRef.current.acts = parsed.acts;
+                    shouldUpdate = true;
+                  }
+                }
+
                 // Only call onMessageUpdate once per chunk after processing everything
                 if (shouldUpdate && currentMessageRef.current) {
                   onMessageUpdate({ ...currentMessageRef.current });

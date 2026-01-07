@@ -5,6 +5,23 @@ export interface Message {
   timestamp: Date;
   files?: FileAttachment[];
   choices?: Array<{ title: string; value: string }>;
+  acts?: ActsData;
+}
+
+export interface ActsData {
+  total: number;
+  filters: {
+    state: string;
+    industry: string;
+    employee_size: string;
+  };
+  acts: Array<{
+    id: number;
+    legislative_area: string;
+    central_acts: string;
+    state_acts: string;
+    [key: string]: any;
+  }>;
 }
 
 export interface FileAttachment {
