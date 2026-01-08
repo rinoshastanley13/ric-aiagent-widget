@@ -23,6 +23,16 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
   const currentConversation = state.currentConversation;
   const [inputValue, setInputValue] = useState('');
 
+  // Track message count for VALID_WIDGET_ID to capture name and email
+  const isValidWidget = appId === 'VALID_WIDGET_ID';
+  const [userMessageCount, setUserMessageCount] = useState(() => {
+    if (isValidWidget) {
+      const stored = localStorage.getItem('valid_widget_message_count');
+      return stored ? parseInt(stored, 10) : 0;
+    }
+    return 0;
+  });
+
   // Handler for when backend signals provider switch
   const handleProviderSwitch = useCallback((newProvider: string) => {
     console.log(`Provider switch requested: ${state.currentProvider} -> ${newProvider}`);
@@ -167,6 +177,35 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
     const effectiveProvider = overrideProvider || propProvider || state.currentProvider;
     console.log(`[ChatAgent] Sending message with provider: ${effectiveProvider} (override: ${overrideProvider}, prop: ${propProvider}, state: ${state.currentProvider})`);
 
+    // Special handling for VALID_WIDGET_ID: capture first two messages as name and email
+    if (isValidWidget && userMessageCount < 2) {
+      const currentCount = userMessageCount;
+
+      if (currentCount === 0) {
+        // First message is the name
+        const userData = { name: content.trim() };
+        localStorage.setItem('valid_widget_user_data', JSON.stringify(userData));
+        console.log('[VALID_WIDGET_ID] Saved name:', content.trim());
+
+        // Increment counter
+        const newCount = 1;
+        setUserMessageCount(newCount);
+        localStorage.setItem('valid_widget_message_count', newCount.toString());
+      } else if (currentCount === 1) {
+        // Second message is the email
+        const storedData = localStorage.getItem('valid_widget_user_data');
+        const userData = storedData ? JSON.parse(storedData) : {};
+        userData.email = content.trim();
+        localStorage.setItem('valid_widget_user_data', JSON.stringify(userData));
+        console.log('[VALID_WIDGET_ID] Saved email:', content.trim());
+
+        // Increment counter
+        const newCount = 2;
+        setUserMessageCount(newCount);
+        localStorage.setItem('valid_widget_message_count', newCount.toString());
+      }
+    }
+
     setHasUserSentMessage(true);
 
     // Get User Email
@@ -285,7 +324,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         },
       });
     }
-  }, [currentConversation, dispatch, streamMessage, state.currentSessionId, state.currentThreadId, state.user?.email, state.currentProvider, propProvider, handleProviderSwitch]);
+  }, [currentConversation, dispatch, streamMessage, state.currentSessionId, state.currentThreadId, state.user?.email, state.currentProvider, propProvider, handleProviderSwitch, isValidWidget, userMessageCount]);
 
   const handleChoiceSelect = useCallback(async (value: string, messageId: string) => {
     // Check if this is an AI Assistant choice
@@ -358,13 +397,13 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         borderRadius: '0px'
       }}
     >
-        <div
-          className="hide-scrollbar flex-1 overflow-y-auto p-4 md:p-6 bg-[#f8fafc] rounded-none"
-        >
-          {!shouldShowMessages ? (
-            <AILoader />
-          ) : (
-            <div>
+      <div
+        className="hide-scrollbar flex-1 overflow-y-auto p-4 md:p-6 bg-[#f8fafc] rounded-none"
+      >
+        {!shouldShowMessages ? (
+          <AILoader />
+        ) : (
+          <div>
             {currentConversation?.messages?.map((message, index) => (
               <MessageBubble
                 key={message.id || index}

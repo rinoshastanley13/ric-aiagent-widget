@@ -1,3 +1,10 @@
+export interface LeadFormData {
+  company_name: string;
+  contact_person_name: string;
+  email: string;
+  mobile_number: string;
+}
+
 export interface Message {
   id: string;
   content: string;
@@ -6,6 +13,7 @@ export interface Message {
   files?: FileAttachment[];
   choices?: Array<{ title: string; value: string }>;
   acts?: ActsData;
+  leadFormTrigger?: boolean; // Indicates if this message should show the lead form
 }
 
 export interface ActsData {
