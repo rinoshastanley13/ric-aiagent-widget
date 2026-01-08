@@ -119,6 +119,10 @@ function WidgetContent() {
         // Clear user session and create new guest user
         localStorage.removeItem('cms_context');
 
+        // Reset VALID_WIDGET_ID data for new chat
+        localStorage.removeItem('valid_widget_user_data');
+        localStorage.setItem('valid_widget_message_count', '0');
+
         const guestId = Math.random().toString(36).substring(7);
         const newUser = {
             name: 'Guest',

@@ -13,6 +13,7 @@ import rehypeRaw from 'rehype-raw'; // Add this import
 import DOMPurify from 'dompurify';
 import { ChoiceButtons } from './ChoiceButtons';
 import { ActsList } from './ActsList';
+import { LeadGenForm } from './LeadGenForm';
 
 interface MessageBubbleProps {
   message: Message;
@@ -34,11 +35,45 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
 
   // Add state for feedback in your component
   const [feedback, setFeedback] = useState<'thumbsUp' | 'thumbsDown' | null>(null);
+  const [showLeadForm, setShowLeadForm] = useState(false);
+
+  // Check if this message should show the lead form
+  useEffect(() => {
+    const shouldShowForm =
+      message.leadFormTrigger ||
+      message.content.toLowerCase().includes('ric_leadgenform') ||
+      message.content.toLowerCase().includes('lead gen form');
+
+    setShowLeadForm(shouldShowForm);
+  }, [message.content, message.leadFormTrigger]);
+
+  // Check if message contains technical triggers that should be hidden
+  const shouldHideMessageContent = () => {
+    const content = message.content.toLowerCase();
+    const technicalTriggers = [
+      'ric_leadgenform',
+      'lead gen form',
+      'switch_provider',
+      '__end_switch'
+    ];
+
+    return technicalTriggers.some(trigger => content.includes(trigger));
+  };
 
   const handleFeedback = (type: 'thumbsUp' | 'thumbsDown') => {
     setFeedback(type);
     // You can also send this feedback to your backend
     console.log(`User gave ${type} feedback for message:`, message.id);
+  };
+
+  const handleLeadFormSubmit = (data: any) => {
+    console.log('Lead form submitted:', data);
+    setShowLeadForm(false);
+  };
+
+  const handleLeadFormSkip = () => {
+    console.log('Lead form skipped');
+    setShowLeadForm(false);
   };
 
   // Function to detect if content contains HTML
@@ -378,26 +413,28 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
           )}
 
           {/* Message content */}
-          <div className={`prose max-w-none ${isUser ? 'prose-invert' : 'prose-gray'} prose-sm md:prose-base`}>
-            {isUser ? (
-              <div className="whitespace-pre-wrap break-words leading-relaxed">
-                {message.content}
-              </div>
-            ) : (
-              <>
-                {/* Try to render as HTML first, fallback to markdown */}
-                {renderHTMLContent(message.content) || (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]} // Add rehypeRaw here
-                    components={MarkdownComponents}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
-                )}
-              </>
-            )}
-          </div>
+          {!shouldHideMessageContent() && (
+            <div className={`prose max-w-none ${isUser ? 'prose-invert' : 'prose-gray'} prose-sm md:prose-base`}>
+              {isUser ? (
+                <div className="whitespace-pre-wrap break-words leading-relaxed">
+                  {message.content}
+                </div>
+              ) : (
+                <>
+                  {/* Try to render as HTML first, fallback to markdown */}
+                  {renderHTMLContent(message.content) || (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw]} // Add rehypeRaw here
+                      components={MarkdownComponents}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {/* Choice Buttons */}
           {!isUser && message.choices && message.choices.length > 0 && onChoiceSelect && (
@@ -410,6 +447,16 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
           {/* Acts List */}
           {!isUser && message.acts && (
             <ActsList data={message.acts} />
+          )}
+
+          {/* Lead Generation Form */}
+          {!isUser && showLeadForm && (
+            <div className="mt-4">
+              <LeadGenForm
+                onSubmit={handleLeadFormSubmit}
+                onSkip={handleLeadFormSkip}
+              />
+            </div>
           )}
 
           {/* Timestamp */}
