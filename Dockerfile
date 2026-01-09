@@ -1,4 +1,4 @@
-# Production image using already built standalone artifacts
+# Production image using Next.js standalone build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
@@ -9,22 +9,17 @@ RUN apk update && apk upgrade && \
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=4000
+ENV HOSTNAME=0.0.0.0
 
 # Create unprivileged user
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy the standalone build (includes server.js, .next, node_modules, package.json)
-COPY .next/standalone ./
-
-# Copy static files
-COPY .next/static ./.next/static
-
-# Copy public files
-COPY public ./public
-
-# Set proper permissions for runtime
-RUN chown -R nextjs:nodejs /app
+# Copy the standalone build with correct ownership
+COPY --chown=nextjs:nodejs .next/standalone ./
+COPY --chown=nextjs:nodejs .next/static ./.next/static
+COPY --chown=nextjs:nodejs public ./public
 
 # Switch to unprivileged user
 USER nextjs
