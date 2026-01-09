@@ -133,6 +133,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
                   content: assistantMessage.content,
                   choices: assistantMessage.choices,
                   acts: assistantMessage.acts,
+                  dailyUpdates: assistantMessage.dailyUpdates,
                 },
               });
             },
@@ -290,6 +291,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
               content: assistantMessage.content,
               choices: assistantMessage.choices,
               acts: assistantMessage.acts,
+              dailyUpdates: assistantMessage.dailyUpdates,
             },
           });
         },
