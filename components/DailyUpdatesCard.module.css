@@ -1,0 +1,185 @@
+.dailyUpdatesContainer {
+    width: 100%;
+    max-width: 450px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.categoryGroup {
+    margin-bottom: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+.categoryHeader {
+    background: #424242;
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.categoryName {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.categoryBadge {
+    background: white;
+    color: #424242;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.updatesList {
+    padding: 0;
+}
+
+.updateCard {
+    padding: 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.updateCard:last-child {
+    border-bottom: none;
+}
+
+.updateTitle {
+    color: #1976d2;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.updateTitle:hover {
+    text-decoration: underline;
+}
+
+.updateMetadata {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.metadataItem {
+    display: flex;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.metadataLabel {
+    font-weight: 600;
+    color: #666;
+    min-width: 100px;
+}
+
+.metadataValue {
+    color: #333;
+}
+
+.sourceLink {
+    color: #1976d2;
+    text-decoration: none;
+}
+
+.sourceLink:hover {
+    text-decoration: underline;
+}
+
+.updateActions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.actionBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    background: white;
+    color: #333;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.actionBtn:hover {
+    background: #f5f5f5;
+    border-color: #999;
+}
+
+.btnIcon {
+    font-size: 12px;
+}
+
+.changesBtn .btnIcon {
+    filter: grayscale(1);
+}
+
+.updateDescription {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f9f9f9;
+    border-left: 3px solid #1976d2;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #333;
+}
+
+.updateDescription strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #666;
+}
+
+.changesTable {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f0f4ff;
+    border-radius: 4px;
+}
+
+.changesTable table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.changesTable th {
+    background: #e3e9f5;
+    padding: 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border: 1px solid #d0d8e8;
+}
+
+.changesTable td {
+    padding: 8px;
+    border: 1px solid #d0d8e8;
+    color: #666;
+}
+
+.newValue {
+    color: #1976d2;
+    font-weight: 600;
+}
+
+.changesNote {
+    margin: 8px 0 0 0;
+    font-size: 11px;
+    color: #999;
+    font-style: italic;
+}

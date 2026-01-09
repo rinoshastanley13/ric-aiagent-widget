@@ -82,6 +82,15 @@ export const useChatStream = () => {
                   }
                 }
 
+                // Extract dailyUpdates if present
+                if (parsed.dailyUpdates) {
+                  console.log('🚀 [useChatStream] FRONTEND RECEIVED DAILY UPDATES:', parsed.dailyUpdates);
+                  if (currentMessageRef.current) {
+                    currentMessageRef.current.dailyUpdates = parsed.dailyUpdates;
+                    shouldUpdate = true;
+                  }
+                }
+
                 // Only call onMessageUpdate once per chunk after processing everything
                 if (shouldUpdate && currentMessageRef.current) {
                   onMessageUpdate({ ...currentMessageRef.current });

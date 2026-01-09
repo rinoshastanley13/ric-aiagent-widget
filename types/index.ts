@@ -13,6 +13,7 @@ export interface Message {
   files?: FileAttachment[];
   choices?: Array<{ title: string; value: string }>;
   acts?: ActsData;
+  dailyUpdates?: DailyUpdatesData;
   leadFormTrigger?: boolean; // Indicates if this message should show the lead form
 }
 
@@ -30,6 +31,30 @@ export interface ActsData {
     state_acts: string;
     [key: string]: any;
   }>;
+}
+
+export interface DailyUpdate {
+  id: number;
+  title: string;
+  category: string;
+  description: string;
+  change_type: string;
+  state: string;
+  effective_date: string;
+  update_date: string;
+  source_link?: string;
+}
+
+export interface DailyUpdatesData {
+  total: number;
+  grouped_by_category: {
+    [category: string]: {
+      category: string;
+      count: number;
+      updates: DailyUpdate[];
+    };
+  };
+  updates: DailyUpdate[];
 }
 
 export interface FileAttachment {

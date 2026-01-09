@@ -8,7 +8,7 @@ type ChatAction =
   | { type: 'ADD_CONVERSATION'; payload: Conversation }
   | { type: 'SET_CURRENT_CONVERSATION'; payload: Conversation | null }
   | { type: 'ADD_MESSAGE'; payload: { conversationId: string; message: Message } }
-  | { type: 'UPDATE_MESSAGE'; payload: { conversationId: string; messageId: string; content: string; choices?: Array<{ title: string; value: string }>; acts?: ActsData } }
+  | { type: 'UPDATE_MESSAGE'; payload: { conversationId: string; messageId: string; content: string; choices?: Array<{ title: string; value: string }>; acts?: ActsData; dailyUpdates?: DailyUpdatesData } }
   | { type: 'SET_IDS'; payload: { sessionId: string; threadId: string; conversationId: string } }
   | { type: 'SET_IDS'; payload: { sessionId: string; threadId: string; conversationId: string } }
   | { type: 'SET_PROVIDER'; payload: string }
@@ -76,7 +76,7 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
               ...conv,
               messages: conv.messages.map(msg =>
                 msg.id === action.payload.messageId
-                  ? { ...msg, content: action.payload.content, ...(action.payload.choices && { choices: action.payload.choices }), ...(action.payload.acts && { acts: action.payload.acts }) }
+                  ? { ...msg, content: action.payload.content, ...(action.payload.choices && { choices: action.payload.choices }), ...(action.payload.acts && { acts: action.payload.acts }), ...(action.payload.dailyUpdates && { dailyUpdates: action.payload.dailyUpdates }) }
                   : msg
               ),
             }
@@ -88,7 +88,7 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
               ...state.currentConversation,
               messages: state.currentConversation.messages.map(msg =>
                 msg.id === action.payload.messageId
-                  ? { ...msg, content: action.payload.content, ...(action.payload.choices && { choices: action.payload.choices }), ...(action.payload.acts && { acts: action.payload.acts }) }
+                  ? { ...msg, content: action.payload.content, ...(action.payload.choices && { choices: action.payload.choices }), ...(action.payload.acts && { acts: action.payload.acts }), ...(action.payload.dailyUpdates && { dailyUpdates: action.payload.dailyUpdates }) }
                   : msg
               ),
             }
