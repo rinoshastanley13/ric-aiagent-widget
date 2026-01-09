@@ -1,4 +1,4 @@
-# Production image using Next.js standalone build
+# Production image using standard Next.js build + custom server
 FROM node:20-alpine AS runner
 WORKDIR /app
 
@@ -16,10 +16,12 @@ ENV HOSTNAME=0.0.0.0
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy the standalone build with correct ownership
-COPY --chown=nextjs:nodejs .next/standalone ./
-COPY --chown=nextjs:nodejs .next/static ./.next/static
+# Copy the built application with correct ownership
+COPY --chown=nextjs:nodejs package*.json ./
+COPY --chown=nextjs:nodejs node_modules ./node_modules
+COPY --chown=nextjs:nodejs .next ./.next
 COPY --chown=nextjs:nodejs public ./public
+COPY --chown=nextjs:nodejs server.js ./server.js
 
 # Switch to unprivileged user
 USER nextjs
