@@ -14,6 +14,7 @@ import DOMPurify from 'dompurify';
 import { ChoiceButtons } from './ChoiceButtons';
 import { ActsList } from './ActsList';
 import { LeadGenForm } from './LeadGenForm';
+import { DailyUpdatesCard } from './DailyUpdatesCard';
 
 interface MessageBubbleProps {
   message: Message;
@@ -447,6 +448,11 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
           {/* Acts List */}
           {!isUser && message.acts && (
             <ActsList data={message.acts} />
+          )}
+
+          {/* Daily Updates Card */}
+          {!isUser && message.dailyUpdates && (
+            <DailyUpdatesCard data={message.dailyUpdates} />
           )}
 
           {/* Lead Generation Form */}
