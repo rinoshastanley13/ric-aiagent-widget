@@ -328,42 +328,134 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
     }
   }, [currentConversation, dispatch, streamMessage, state.currentSessionId, state.currentThreadId, state.user?.email, state.currentProvider, propProvider, handleProviderSwitch, isValidWidget, userMessageCount]);
 
-  const handleChoiceSelect = useCallback(async (value: string, messageId: string) => {
+  const handleChoiceSelect = useCallback(async (value: string, title: string, messageId: string) => {
     // Check if this is an AI Assistant choice
     const isAIAssistantChoice = ['AI_ASSISTANT', 'ASK_AI', 'ASK_RICA', 'TALK_AI'].includes(
       value.toUpperCase()
     );
 
+    // Get User Email
+    let userEmail = state.user?.email;
+    if (!userEmail) {
+      try {
+        const stored = localStorage.getItem('widget_user');
+        if (stored) userEmail = JSON.parse(stored).email;
+      } catch (e) { }
+    }
+
+    if (!userEmail) {
+      console.error("No user email found, cannot send message");
+      return;
+    }
+
+    let localConversationId = currentConversation?.id;
+    let isNewChat = false;
+
+    // Create new conversation if none exists
+    if (!currentConversation) {
+      localConversationId = Date.now().toString();
+      isNewChat = true;
+      const newConversation = {
+        id: localConversationId,
+        session_id: state.currentSessionId || '',
+        title: title.slice(0, 50) + (title.length > 50 ? '...' : ''),
+        createdAt: new Date(),
+        messages: [],
+      };
+      dispatch({ type: 'ADD_CONVERSATION', payload: newConversation });
+    } else {
+      localConversationId = currentConversation.id;
+    }
+
+    const backendSessionId = state.currentSessionId;
+    const backendThreadId = currentConversation?.thread_id || state.currentThreadId || 'new';
+
+    // Add user message with TITLE displayed in UI
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: title, // Display the title in the UI
+      role: 'user',
+      timestamp: new Date(),
+      files: [],
+    };
+
+    dispatch({
+      type: 'ADD_MESSAGE',
+      payload: { conversationId: localConversationId!, message: userMessage },
+    });
+
+    // Create initial assistant message
+    const assistantMessageId = Date.now().toString() + '-assistant';
+    const initialAssistantMessage: Message = {
+      id: assistantMessageId,
+      content: '',
+      role: 'assistant',
+      timestamp: new Date(),
+      files: [],
+    };
+
+    dispatch({
+      type: 'ADD_MESSAGE',
+      payload: { conversationId: localConversationId!, message: initialAssistantMessage },
+    });
+
     if (isAIAssistantChoice) {
       console.log('AI Assistant choice detected, switching provider to openai');
-
-      // Add transition message
-      if (currentConversation) {
-        const transitionMessage: Message = {
-          id: Date.now().toString() + '-transition',
-          content: '🤖 Switching to AI Assistant mode...',
-          role: 'assistant',
-          timestamp: new Date(),
-          files: [],
-        };
-
-        dispatch({
-          type: 'ADD_MESSAGE',
-          payload: { conversationId: currentConversation.id, message: transitionMessage },
-        });
-      }
-
       // Switch provider immediately
       dispatch({ type: 'SET_PROVIDER', payload: 'openai' });
-
       // Small delay to let UI update
       await new Promise(resolve => setTimeout(resolve, 100));
+    }
 
-      // Send message with openai provider
-      await handleSendMessage(value, [], 'openai');
-    } else {
-      // Regular choice - send as plain text
-      await handleSendMessage(value);
+    // Stream assistant response - send VALUE to backend but title was shown to user
+    try {
+      await streamMessage(
+        value, // Send the VALUE to Botpress, not the title
+        [],
+        (assistantMessage: Message) => {
+          if (assistantMessage.acts) console.log('🚀 [ChatAgent] Dispatching UPDATE_MESSAGE with acts:', assistantMessage.acts);
+          dispatch({
+            type: 'UPDATE_MESSAGE',
+            payload: {
+              conversationId: localConversationId!,
+              messageId: assistantMessageId,
+              content: assistantMessage.content,
+              choices: assistantMessage.choices,
+              acts: assistantMessage.acts,
+              dailyUpdates: assistantMessage.dailyUpdates,
+            },
+          });
+        },
+        userEmail,
+        backendSessionId,
+        backendThreadId,
+        isNewChat,
+        apiKey,
+        isAIAssistantChoice ? 'openai' : (propProvider || state.currentProvider),
+        (newSessionId, newThreadId) => {
+          dispatch({
+            type: 'SET_IDS',
+            payload: {
+              sessionId: newSessionId,
+              threadId: newThreadId,
+              conversationId: localConversationId!
+            }
+          });
+        },
+        assistantMessageId,
+        appId,
+        handleProviderSwitch
+      );
+    } catch (err) {
+      console.error('Error streaming message:', err);
+      dispatch({
+        type: 'UPDATE_MESSAGE',
+        payload: {
+          conversationId: localConversationId!,
+          messageId: assistantMessageId,
+          content: 'Sorry, I encountered an error. Please try again.',
+        },
+      });
     }
 
     if (currentConversation) {
@@ -379,7 +471,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         });
       }
     }
-  }, [currentConversation, dispatch, handleSendMessage]);
+  }, [currentConversation, dispatch, streamMessage, state.user?.email, state.currentSessionId, state.currentThreadId, state.currentProvider, propProvider, apiKey, appId, handleProviderSwitch]);
 
   const handlePromptSelect = useCallback((prompt: PromptTemplate) => {
     setInputValue(prompt.content);
@@ -411,7 +503,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
                 key={message.id || index}
                 message={message}
                 isStreaming={isStreaming && message.role === 'assistant' && index === currentConversation.messages.length - 1}
-                onChoiceSelect={(value) => handleChoiceSelect(value, message.id)}
+                onChoiceSelect={(value, title) => handleChoiceSelect(value, title, message.id)}
               />
             ))}
             <div ref={messagesEndRef} />

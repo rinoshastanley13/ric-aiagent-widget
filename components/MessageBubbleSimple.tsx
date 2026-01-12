@@ -8,7 +8,7 @@ import { ChoiceButtons } from './ChoiceButtons';
 interface MessageBubbleSimpleProps {
     message: Message;
     isStreaming?: boolean;
-    onChoiceSelect?: (value: string) => void;
+    onChoiceSelect?: (value: string, title: string) => void;
 }
 
 export const MessageBubbleSimple: React.FC<MessageBubbleSimpleProps> = ({
