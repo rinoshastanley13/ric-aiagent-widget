@@ -10,7 +10,7 @@ export interface Choice {
 
 interface ChoiceButtonsProps {
     choices: Choice[];
-    onSelect: (value: string) => void;
+    onSelect: (value: string, title: string) => void;
 }
 
 export const ChoiceButtons: React.FC<ChoiceButtonsProps> = ({ choices, onSelect }) => {
@@ -18,7 +18,7 @@ export const ChoiceButtons: React.FC<ChoiceButtonsProps> = ({ choices, onSelect 
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
     const handleClick = (choice: Choice) => {
-        onSelect(choice.value);
+        onSelect(choice.value, choice.title);
     };
 
     return (

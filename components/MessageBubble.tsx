@@ -15,12 +15,13 @@ import { ChoiceButtons } from './ChoiceButtons';
 import { ActsList } from './ActsList';
 import { LeadGenForm } from './LeadGenForm';
 import { DailyUpdatesCard } from './DailyUpdatesCard';
+import { StatesSelector } from './StatesSelector';
 
 interface MessageBubbleProps {
   message: Message;
   isStreaming?: boolean;
   feedback?: 'thumbsUp' | 'thumbsDown' | null;
-  onChoiceSelect?: (value: string) => void;
+  onChoiceSelect?: (value: string, title: string) => void;
   allowHtml?: boolean;
 }
 
@@ -37,6 +38,7 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
   // Add state for feedback in your component
   const [feedback, setFeedback] = useState<'thumbsUp' | 'thumbsDown' | null>(null);
   const [showLeadForm, setShowLeadForm] = useState(false);
+  const [showStatesSelector, setShowStatesSelector] = useState(false);
 
   // Check if this message should show the lead form
   useEffect(() => {
@@ -48,6 +50,12 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
     setShowLeadForm(shouldShowForm);
   }, [message.content, message.leadFormTrigger]);
 
+  // Check if this message should show the states selector
+  useEffect(() => {
+    const shouldShowStates = message.content.toLowerCase().includes('ric_states');
+    setShowStatesSelector(shouldShowStates);
+  }, [message.content]);
+
   // Check if message contains technical triggers that should be hidden
   const shouldHideMessageContent = () => {
     const content = message.content.toLowerCase();
@@ -55,7 +63,8 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
       'ric_leadgenform',
       'lead gen form',
       'switch_provider',
-      '__end_switch'
+      '__end_switch',
+      'ric_states'
     ];
 
     return technicalTriggers.some(trigger => content.includes(trigger));
@@ -437,6 +446,18 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
             </div>
           )}
 
+
+
+          {/* Acts List - Show before choice buttons */}
+          {!isUser && message.acts && (
+            <ActsList data={message.acts} />
+          )}
+
+          {/* Daily Updates Card - Show before choice buttons */}
+          {!isUser && message.dailyUpdates && (
+            <DailyUpdatesCard data={message.dailyUpdates} />
+          )}
+
           {/* Choice Buttons */}
           {!isUser && message.choices && message.choices.length > 0 && onChoiceSelect && (
             <ChoiceButtons
@@ -445,14 +466,11 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
             />
           )}
 
-          {/* Acts List */}
-          {!isUser && message.acts && (
-            <ActsList data={message.acts} />
-          )}
-
-          {/* Daily Updates Card */}
-          {!isUser && message.dailyUpdates && (
-            <DailyUpdatesCard data={message.dailyUpdates} />
+          {/* States Selector */}
+          {!isUser && showStatesSelector && onChoiceSelect && (
+            <StatesSelector
+              onSelect={(state) => onChoiceSelect(state, state)}
+            />
           )}
 
           {/* Lead Generation Form */}
