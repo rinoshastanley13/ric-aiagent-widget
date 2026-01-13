@@ -15,6 +15,7 @@ export interface Message {
   acts?: ActsData;
   dailyUpdates?: DailyUpdatesData;
   leadFormTrigger?: boolean; // Indicates if this message should show the lead form
+  isAskRica?: boolean; // Indicates if this message is from the "Ask Rica" flow (LLM)
 }
 
 export interface ActsData {

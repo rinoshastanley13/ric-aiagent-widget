@@ -11,13 +11,15 @@ interface ChatInputProps {
   disabled?: boolean;
   inputValue?: string;
   onInputChange?: (value: string) => void;
+  errorMessage?: string | null;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
   onSendMessage,
   disabled = false,
   inputValue,
-  onInputChange
+  onInputChange,
+  errorMessage
 }) => {
   const [message, setMessage] = useState(inputValue || '');
   const [files, setFiles] = useState<FileAttachment[]>([]);
@@ -141,43 +143,51 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           <Plus className="w-5 h-5" />
         </button>
 
-        {/* Text Input Container */}
-        <div
-          className="flex-1"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            background: '#f8fafc',
-            border: '2px solid #e2e8f0',
-            borderRadius: '2px',
-            padding: '10px 12px',
-            transition: 'border-color 0.3s ease'
-          }}
-        >
-          <textarea
-            ref={textareaRef}
-            value={message}
-            onChange={handleTextareaChange}
-            onKeyDown={handleKeyDown}
-            placeholder={disabled ? "AI is thinking.." : "Ask your query"}
-            disabled={disabled}
-            rows={1}
-            className="flex-1 resize-none bg-transparent outline-none disabled:cursor-not-allowed"
+        {/* Text Input Container & Error Wrapper */}
+        <div className="flex-1 flex flex-col space-y-1">
+          <div
             style={{
-              border: 'none',
-              fontSize: '14px',
-              color: '#1e293b',
-              minHeight: '24px',
-              maxHeight: '144px',
-              overflowY: textareaRows >= 6 ? 'auto' : 'hidden'
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              background: '#f8fafc',
+              border: errorMessage ? '2px solid #ef4444' : '2px solid #e2e8f0',
+              borderRadius: '2px',
+              padding: '10px 12px',
+              transition: 'border-color 0.3s ease'
             }}
-          />
+          >
+            <textarea
+              ref={textareaRef}
+              value={message}
+              onChange={handleTextareaChange}
+              onKeyDown={handleKeyDown}
+              placeholder={disabled ? "AI is thinking.." : "Ask your query"}
+              disabled={disabled}
+              rows={1}
+              className="flex-1 resize-none bg-transparent outline-none disabled:cursor-not-allowed"
+              style={{
+                border: 'none',
+                fontSize: '14px',
+                color: '#1e293b',
+                minHeight: '24px',
+                maxHeight: '144px',
+                overflowY: textareaRows >= 6 ? 'auto' : 'hidden'
+              }}
+            />
 
-          {/* Progress spinner when processing */}
-          {disabled && (
-            <div className="flex-shrink-0">
-              <div className="border-2 border-blue-500 border-t-transparent rounded-full w-5 h-5 animate-spin"></div>
+            {/* Progress spinner when processing */}
+            {disabled && (
+              <div className="flex-shrink-0">
+                <div className="border-2 border-blue-500 border-t-transparent rounded-full w-5 h-5 animate-spin"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Error Message Display */}
+          {errorMessage && (
+            <div className="text-red-500 text-xs font-medium pl-1 animate-pulse">
+              {errorMessage}
             </div>
           )}
         </div>
