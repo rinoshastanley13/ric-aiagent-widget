@@ -25,6 +25,10 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
 
   // Track message count for VALID_WIDGET_ID to capture name and email
   const isValidWidget = appId === 'VALID_WIDGET_ID';
+  // State for email validation
+  const [expectingBusinessEmail, setExpectingBusinessEmail] = useState(false);
+  const [inputError, setInputError] = useState<string | null>(null);
+
   const [userMessageCount, setUserMessageCount] = useState(() => {
     if (isValidWidget) {
       const stored = localStorage.getItem('valid_widget_message_count');
@@ -66,6 +70,19 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
   useEffect(() => {
     scrollToBottom();
   }, [currentConversation?.messages, scrollToBottom]); // Only scroll when messages change
+
+  // Check for Email Validation Trigger in latest assistant message
+  useEffect(() => {
+    if (!currentConversation?.messages) return;
+
+    const lastMessage = currentConversation.messages[currentConversation.messages.length - 1];
+    if (lastMessage && lastMessage.role === 'assistant') {
+      if (lastMessage.content.includes('RIC_EMAIL_VALIDATION')) {
+        console.log('[ChatAgent] Triggered Business Email Validation Mode');
+        setExpectingBusinessEmail(true);
+      }
+    }
+  }, [currentConversation?.messages]);
 
   // Reset state when conversation changes (not when messages change)
   useEffect(() => {
@@ -119,10 +136,25 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
           payload: { conversationId: localConversationId, message: initialAssistantMessage },
         });
 
+        // Determine initial message based on cache
+        let initialMessage = "Hello";
+        try {
+          const cachedDataStr = localStorage.getItem('valid_widget_user_data');
+          if (cachedDataStr) {
+            const cachedData = JSON.parse(cachedDataStr);
+            if (cachedData.name && cachedData.email) {
+              initialMessage = "RIC-USER-CACHE";
+              console.log("Found cached user data, sending RIC-USER-CACHE");
+            }
+          }
+        } catch (e) {
+          console.error("Error reading cached user data", e);
+        }
+
         // Stream welcome response
         try {
           await streamMessage(
-            "Hello",
+            initialMessage,
             [],
             (assistantMessage: Message) => {
               dispatch({
@@ -174,6 +206,75 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
   const handleSendMessage = useCallback(async (content: string, files: FileAttachment[] = [], overrideProvider?: string) => {
     if (!content.trim()) return;
 
+    // Clear previous errors
+    setInputError(null);
+
+    // 1. Resolve Identity IMMEDIATELY (Before any cache updates)
+    // We lock in the current user email to ensure we send the message as the current user (e.g. Guest),
+    // even if we update the cache to a new email during this execution.
+    let effectiveUserEmail = state.user?.email;
+    if (!effectiveUserEmail) {
+      try {
+        const stored = localStorage.getItem('widget_user');
+        if (stored) effectiveUserEmail = JSON.parse(stored).email;
+      } catch (e) { }
+    }
+
+    // Business Email Validation Logic
+    if (expectingBusinessEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(content.trim())) {
+        setInputError("Please enter a valid email address.");
+        return;
+      }
+
+      const publicDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'live.com', 'msn.com', 'icloud.com', 'aol.com', 'protonmail.com', 'zoho.com', 'yandex.com', 'mail.com', 'gmx.com'];
+      const domain = content.trim().split('@')[1].toLowerCase();
+
+      if (publicDomains.includes(domain)) {
+        setInputError("Please enter a valid business email address (e.g., name@company.com). Public domains like Gmail are not accepted.");
+        return;
+      }
+
+
+      // If valid, persist the validated email to cache and update user
+      try {
+        const validatedEmail = content.trim();
+        const username = validatedEmail.split('@')[0]; // Extract username from email
+
+        // Update valid_widget_user_data cache
+        const cachedDataStr = localStorage.getItem('valid_widget_user_data');
+        let cachedData = cachedDataStr ? JSON.parse(cachedDataStr) : {};
+        cachedData.email = validatedEmail;
+        if (!cachedData.name) {
+          cachedData.name = username; // Use email prefix as default name if not set
+        }
+        localStorage.setItem('valid_widget_user_data', JSON.stringify(cachedData));
+        console.log('[Email Validation] Updated cache with validated email:', validatedEmail);
+
+        // Update widget_user 
+        // REVERTED per user request: We must NEVER update the identity used for Chat API.
+        // We keep the Guest Identity (email) in widget_user permanently to ensure session continuity.
+        // widgetUser.email is NOT updated.
+        // We only update valid_widget_user_data (above) for form pre-fill.
+
+        // Call backend to update user (rename Guest -> Real)
+        // REVERTED: We do NOT call backend update to preserve session.
+        // We continue using the original Guest Email for the API credential for this session.
+        // The new email is captured in LocalStorage for future sessions.
+        const currentGuestEmail = effectiveUserEmail;
+        if (currentGuestEmail && currentGuestEmail !== validatedEmail) {
+          console.log(`[Email Validation] Validated ${validatedEmail} but continuing session as ${currentGuestEmail}`);
+        }
+
+      } catch (e) {
+        console.error('[Email Validation] Error updating cache:', e);
+      }
+
+      // Clear flag and proceed
+      setExpectingBusinessEmail(false);
+    }
+
     // Debug: Log which provider we're using
     const effectiveProvider = overrideProvider || propProvider || state.currentProvider;
     console.log(`[ChatAgent] Sending message with provider: ${effectiveProvider} (override: ${overrideProvider}, prop: ${propProvider}, state: ${state.currentProvider})`);
@@ -209,14 +310,8 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
 
     setHasUserSentMessage(true);
 
-    // Get User Email
-    let userEmail = state.user?.email;
-    if (!userEmail) {
-      try {
-        const stored = localStorage.getItem('widget_user');
-        if (stored) userEmail = JSON.parse(stored).email;
-      } catch (e) { }
-    }
+    // Get User Email - ALREADY RESOLVED ABOVE
+    let userEmail = effectiveUserEmail;
 
     if (!userEmail) {
       console.error("No user email found, cannot send message");
@@ -269,6 +364,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
       role: 'assistant',
       timestamp: new Date(),
       files: [],
+      isAskRica: ['llm', 'openai', 'cloud-llm'].includes(String(effectiveProvider).toLowerCase()),
     };
 
     dispatch({
@@ -392,6 +488,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
       role: 'assistant',
       timestamp: new Date(),
       files: [],
+      isAskRica: isAIAssistantChoice,
     };
 
     dispatch({
@@ -504,6 +601,8 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
                 message={message}
                 isStreaming={isStreaming && message.role === 'assistant' && index === currentConversation.messages.length - 1}
                 onChoiceSelect={(value, title) => handleChoiceSelect(value, title, message.id)}
+                onFormSubmit={() => handleSendMessage('RIC_FORM_SUBMITED')}
+                onFormSkip={() => handleSendMessage('RIC_FORM_SKIPPED')}
               />
             ))}
             <div ref={messagesEndRef} />
@@ -523,7 +622,11 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
           onSendMessage={handleSendMessage}
           disabled={isStreaming}
           inputValue={inputValue}
-          onInputChange={setInputValue}
+          onInputChange={(val) => {
+            setInputValue(val);
+            if (inputError) setInputError(null);
+          }}
+          errorMessage={inputError}
         />
       </div>
     </div >

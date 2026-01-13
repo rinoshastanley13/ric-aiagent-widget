@@ -22,6 +22,8 @@ interface MessageBubbleProps {
   isStreaming?: boolean;
   feedback?: 'thumbsUp' | 'thumbsDown' | null;
   onChoiceSelect?: (value: string, title: string) => void;
+  onFormSubmit?: () => void;
+  onFormSkip?: () => void;
   allowHtml?: boolean;
 }
 
@@ -30,6 +32,8 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
   message,
   isStreaming = false,
   onChoiceSelect,
+  onFormSubmit,
+  onFormSkip,
   allowHtml = false
 }) => {
   if (message.acts) console.log('🚀 [MessageBubble] Rendering acts for message:', message.id, message.acts);
@@ -56,7 +60,7 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
     setShowStatesSelector(shouldShowStates);
   }, [message.content]);
 
-  // Check if message contains technical triggers that should be hidden
+  // Check if message contains ONLY technical triggers (no other content)
   const shouldHideMessageContent = () => {
     const content = message.content.toLowerCase();
     const technicalTriggers = [
@@ -64,11 +68,27 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
       'lead gen form',
       'switch_provider',
       '__end_switch',
-      'ric_states'
+      '__end_switch',
+      'ric_states',
+      'ric_email_validation',
+      'ric_form_submited',
+      'ric_form_skipped'
     ];
 
-    return technicalTriggers.some(trigger => content.includes(trigger));
+    // Strip all triggers to see if there's any content left
+    let contentWithoutTriggers = content;
+    technicalTriggers.forEach(trigger => {
+      contentWithoutTriggers = contentWithoutTriggers.replace(new RegExp(trigger, 'gi'), '');
+    });
+
+    // Only hide if there's no meaningful content left after removing triggers
+    return contentWithoutTriggers.trim().length === 0;
   };
+
+  // Prevent rendering empty, pure-trigger user messages (like RIC_FORM_SUBMITED)
+  if (isUser && shouldHideMessageContent() && (!message.files || message.files.length === 0)) {
+    return null;
+  }
 
   const handleFeedback = (type: 'thumbsUp' | 'thumbsDown') => {
     setFeedback(type);
@@ -79,11 +99,17 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
   const handleLeadFormSubmit = (data: any) => {
     console.log('Lead form submitted:', data);
     setShowLeadForm(false);
+    if (onFormSubmit) {
+      onFormSubmit();
+    }
   };
 
   const handleLeadFormSkip = () => {
     console.log('Lead form skipped');
     setShowLeadForm(false);
+    if (onFormSkip) {
+      onFormSkip();
+    }
   };
 
   // Function to detect if content contains HTML
@@ -432,15 +458,31 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
               ) : (
                 <>
                   {/* Try to render as HTML first, fallback to markdown */}
-                  {renderHTMLContent(message.content) || (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw]} // Add rehypeRaw here
-                      components={MarkdownComponents}
-                    >
-                      {message.content}
-                    </ReactMarkdown>
-                  )}
+                  {/* Strip technical triggers from display but keep the message */}
+                  {(() => {
+                    let displayContent = message.content;
+                    // Strip all technical triggers from display
+                    displayContent = displayContent
+                      .replace(/ric_leadgenform/gi, '')
+                      .replace(/lead gen form/gi, '')
+                      .replace(/ric_states/gi, '')
+                      .replace(/RIC_EMAIL_VALIDATION/g, '')
+                      .replace(/switch_provider/gi, '')
+                      .replace(/__end_switch__/gi, '')
+                      .trim();
+
+                    return (
+                      renderHTMLContent(displayContent) || (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeRaw]} // Add rehypeRaw here
+                          components={MarkdownComponents}
+                        >
+                          {displayContent}
+                        </ReactMarkdown>
+                      )
+                    );
+                  })()}
                 </>
               )}
             </div>
@@ -488,27 +530,32 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
             <div className={`text-xs mt-3 ${isUser ? 'text-blue-100' : 'text-gray-500'}`}>
               {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               {' '}
-              <button className={`p-1 rounded transition-colors ${feedback === 'thumbsUp'
-                ? 'bg-green-100 text-green-600'
-                : 'hover:bg-gray-200 text-gray-500 cursor-pointer'
-                }`}
-                onClick={() => handleFeedback('thumbsUp')}
-                title="Good response"
-              >
-                {' '}
-                <ThumbsUp className="w-3 h-3" />
-              </button>
+              {/* Only show feedback for Ask RICA flow messages (LLM) */}
+              {message.isAskRica && (message.acts || message.dailyUpdates || (!message.choices?.length && !message.leadFormTrigger)) && (
+                <>
+                  <button className={`p-1 rounded transition-colors ${feedback === 'thumbsUp'
+                    ? 'bg-green-100 text-green-600'
+                    : 'hover:bg-gray-200 text-gray-500 cursor-pointer'
+                    }`}
+                    onClick={() => handleFeedback('thumbsUp')}
+                    title="Good response"
+                  >
+                    {' '}
+                    <ThumbsUp className="w-3 h-3" />
+                  </button>
 
-              <button className={`p-1 rounded transition-colors ${feedback === 'thumbsDown'
-                ? 'bg-red-100 text-red-600'
-                : 'hover:bg-gray-200 text-gray-500 cursor-pointer'
-                }`}
-                onClick={() => handleFeedback('thumbsDown')}
-                title="Bad response"
-              >
-                {' '}
-                <ThumbsDown className="w-3 h-3" />
-              </button>
+                  <button className={`p-1 rounded transition-colors ${feedback === 'thumbsDown'
+                    ? 'bg-red-100 text-red-600'
+                    : 'hover:bg-gray-200 text-gray-500 cursor-pointer'
+                    }`}
+                    onClick={() => handleFeedback('thumbsDown')}
+                    title="Bad response"
+                  >
+                    {' '}
+                    <ThumbsDown className="w-3 h-3" />
+                  </button>
+                </>
+              )}
             </div>
           )}
 

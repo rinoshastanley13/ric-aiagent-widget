@@ -56,7 +56,9 @@ export const WidgetHeader: React.FC<WidgetHeaderProps> = ({
                             border: '1px solid rgba(255, 255, 255, 0.4)',
                             borderRadius: '20px',
                             padding: '12px 14px',
-                            fontSize: '12px'
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            boxShadow: '1px 3px 10px 2px gray'
                         }}
                         onMouseEnter={(e) => {
                             e.currentTarget.style.background = 'white';
