@@ -18,7 +18,7 @@
 
     var key = myScript.getAttribute('data-key');
     var id = myScript.getAttribute('data-id');
-    var host = myScript.getAttribute('data-host') || 'http://localhost:3000';
+    var host = myScript.getAttribute('data-host') || 'https://localhost:3000';
 
     if (!key || !id) {
         console.error('Chat Widget: Missing data-key or data-id attributes.');
