@@ -110,7 +110,7 @@ export const LeadGenForm: React.FC<LeadGenFormProps> = ({ onSubmit, onSkip }) =>
             localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
 
             // Submit to backend
-            const apiUrl = process.env.NEXT_PUBLIC_CHAT_API_URL;
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
             const response = await fetch(`${apiUrl}/api/leads`, {
                 method: 'POST',
                 headers: {
