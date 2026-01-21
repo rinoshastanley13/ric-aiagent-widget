@@ -20,9 +20,9 @@ export interface UIConfig {
 const defaultConfig: UIConfig = {
     primaryColor: '#2E3B8B',
     headerColor: '#2E3B8B',
-    headerTitle: 'Rica',
+    headerTitle: 'RICA',
     headerIconText: 'RC',
-    botName: 'Rica',
+    botName: 'RICA',
     button: {
         backgroundColor: '#FFFFFF', // Default card/button background
         textColor: '#374151',
