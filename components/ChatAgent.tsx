@@ -76,16 +76,31 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
 
   // Check for Email Validation Trigger in latest assistant message
   useEffect(() => {
-    if (!currentConversation?.messages) return;
+    // If no conversation or messages, ensure validation is OFF
+    if (!currentConversation?.messages || currentConversation.messages.length === 0) {
+      if (expectingBusinessEmail) {
+        console.log('[ChatAgent] No messages, disabling Business Email Validation');
+        setExpectingBusinessEmail(false);
+      }
+      return;
+    }
 
     const lastMessage = currentConversation.messages[currentConversation.messages.length - 1];
-    if (lastMessage && lastMessage.role === 'assistant') {
-      if (lastMessage.content.includes('RIC_EMAIL_VALIDATION')) {
+
+    // Only expect validation if the LAST message is from assistant AND contains the trigger
+    if (lastMessage.role === 'assistant' && lastMessage.content.includes('RIC_EMAIL_VALIDATION')) {
+      if (!expectingBusinessEmail) {
         console.log('[ChatAgent] Triggered Business Email Validation Mode');
         setExpectingBusinessEmail(true);
       }
+    } else {
+      // Otherwise, ensure it is OFF
+      if (expectingBusinessEmail) {
+        console.log('[ChatAgent] Disabling Business Email Validation (Trigger not found in last message)');
+        setExpectingBusinessEmail(false);
+      }
     }
-  }, [currentConversation?.messages]);
+  }, [currentConversation?.messages, expectingBusinessEmail]);
 
   // Use a ref to track previous conversation ID to avoid clearing mid-stream
   const prevConversationIdRef = useRef<string | null>(null);
@@ -156,20 +171,9 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         // Track that this message has been added
         addedMessageIdsRef.current.add(assistantMessageId);
 
-        // Determine initial message based on cache
-        let initialMessage = "Hello";
-        try {
-          const cachedDataStr = localStorage.getItem('valid_widget_user_data');
-          if (cachedDataStr) {
-            const cachedData = JSON.parse(cachedDataStr);
-            if (cachedData.name && cachedData.email) {
-              initialMessage = "RIC-USER-CACHE";
-              console.log("Found cached user data, sending RIC-USER-CACHE");
-            }
-          }
-        } catch (e) {
-          console.error("Error reading cached user data", e);
-        }
+        // Determine initial message based on prop or fallback
+        let initialMessage = userName || "Hello";
+        console.log("Initial message set to:", initialMessage);
 
         // Stream welcome response
         try {
@@ -674,7 +678,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
                 key={message.id || index}
                 message={message}
                 isStreaming={isStreaming && message.role === 'assistant' && index === currentConversation.messages.length - 1}
-                onChoiceSelect={(value, title) => handleChoiceSelect(value, title, message.id)}
+                onChoiceSelect={(value: string, title: string) => handleChoiceSelect(value, title, message.id)}
                 onFormSubmit={() => handleSendMessage('RIC_FORM_SUBMITED')}
                 onFormSkip={() => handleSendMessage('RIC_FORM_SKIPPED')}
               />
