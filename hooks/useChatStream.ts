@@ -23,7 +23,8 @@ export const useChatStream = () => {
     appId?: string,
     onProviderSwitch?: (newProvider: string) => void,
     userName?: string,
-    userDesignation?: string
+    userDesignation?: string,
+    isSupportTicket?: boolean
   ) => {
     setIsStreaming(true);
     setError(null);
@@ -183,7 +184,8 @@ export const useChatStream = () => {
       provider,
       appId,
       userName,
-      userDesignation
+      userDesignation,
+      isSupportTicket
     );
   }, []);
 

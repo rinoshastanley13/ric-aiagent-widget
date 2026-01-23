@@ -24,7 +24,8 @@ export class ChatAPI {
     provider: string = 'botpress',
     appId?: string,
     userName?: string,
-    userDesignation?: string
+    userDesignation?: string,
+    isSupportTicket?: boolean
   ): Promise<void> {
     try {
       const payload = {
@@ -36,7 +37,8 @@ export class ChatAPI {
         provider: provider,
         app_id: appId,
         user_name: userName,
-        user_designation: userDesignation
+        user_designation: userDesignation,
+        is_support_ticket: isSupportTicket
       };
 
       const response = await fetch(`${API_BASE_URL}/chat`, {

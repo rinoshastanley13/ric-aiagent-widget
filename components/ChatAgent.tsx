@@ -31,6 +31,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
   // State for email validation
   const [expectingBusinessEmail, setExpectingBusinessEmail] = useState(false);
   const [inputError, setInputError] = useState<string | null>(null);
+  const [isSupportTicketMode, setIsSupportTicketMode] = useState(false);
 
   const [userMessageCount, setUserMessageCount] = useState(() => {
     if (isValidWidget) {
@@ -101,6 +102,17 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
       }
     }
   }, [currentConversation?.messages, expectingBusinessEmail]);
+
+  // Check for Support Ticket Trigger
+  useEffect(() => {
+    if (!currentConversation?.messages) return;
+    const lastMessage = currentConversation.messages[currentConversation.messages.length - 1];
+
+    if (lastMessage && lastMessage.role === 'assistant' && lastMessage.content.includes('RIC_SUPPORT_TICKET')) {
+      console.log('[ChatAgent] Triggered Support Ticket Mode');
+      setIsSupportTicketMode(true);
+    }
+  }, [currentConversation?.messages]);
 
   // Use a ref to track previous conversation ID to avoid clearing mid-stream
   const prevConversationIdRef = useRef<string | null>(null);
@@ -468,8 +480,15 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         appId,
         handleProviderSwitch,
         userName,
-        userDesignation
+        userDesignation,
+        isSupportTicketMode // Pass support ticket flag
       );
+
+      // Reset support ticket mode after sending
+      if (isSupportTicketMode) {
+        console.log('[ChatAgent] Resetting Support Ticket Mode');
+        setIsSupportTicketMode(false);
+      }
     } catch (err) {
       console.error('Error streaming message:', err);
       dispatch({

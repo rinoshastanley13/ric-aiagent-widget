@@ -302,7 +302,8 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
       'ric_states',
       'ric_email_validation',
       'ric_form_submited',
-      'ric_form_skipped'
+      'ric_form_skipped',
+      'ric_support_ticket'
     ];
 
     // Strip all triggers to see if there's any content left
