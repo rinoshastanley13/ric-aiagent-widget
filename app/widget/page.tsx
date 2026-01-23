@@ -179,6 +179,8 @@ function WidgetContent() {
                                 <ChatAgent
                                     apiKey={context?.app_unique_key || ''}
                                     appId={context?.app_id || ''}
+                                    userName={context?.user_name}
+                                    userDesignation={context?.user_designation}
                                 />
                             </div>
                         </ChatProvider>

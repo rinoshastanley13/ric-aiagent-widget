@@ -12,13 +12,16 @@ interface ChatAgentProps {
   apiKey: string;
   appId?: string;
   provider?: string; // Optional, defaults to context provider
+  userName?: string;
+  userDesignation?: string;
 }
 
-export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: propProvider }) => {
+export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: propProvider, userName, userDesignation }) => {
   const { state, dispatch } = useChat();
   const { streamMessage, isStreaming, error } = useChatStream();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [hasUserSentMessage, setHasUserSentMessage] = useState(false);
+  const addedMessageIdsRef = useRef<Set<string>>(new Set()); // Track added message IDs
 
   const currentConversation = state.currentConversation;
   const [inputValue, setInputValue] = useState('');
@@ -84,11 +87,25 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
     }
   }, [currentConversation?.messages]);
 
+  // Use a ref to track previous conversation ID to avoid clearing mid-stream
+  const prevConversationIdRef = useRef<string | null>(null);
+
   // Reset state when conversation changes (not when messages change)
   useEffect(() => {
-    setHasUserSentMessage(false);
-    setInputValue('');
-  }, [currentConversation?.id]); // Only reset when conversation ID changes
+    const currentId = currentConversation?.id || null;
+    const prevId = prevConversationIdRef.current;
+
+    // Only clear if switching between different conversations (not during initial creation)
+    if (prevId !== null && currentId !== prevId) {
+      console.log(`[ChatAgent] Switching conversations: ${prevId} → ${currentId}, clearing tracking`);
+      setHasUserSentMessage(false);
+      setInputValue('');
+      addedMessageIdsRef.current.clear();
+    }
+
+    // Update the ref for next comparison
+    prevConversationIdRef.current = currentId;
+  }, [currentConversation?.id]);
 
   // Auto-trigger welcome message when chat first opens (after registration)
   useEffect(() => {
@@ -136,6 +153,9 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
           payload: { conversationId: localConversationId, message: initialAssistantMessage },
         });
 
+        // Track that this message has been added
+        addedMessageIdsRef.current.add(assistantMessageId);
+
         // Determine initial message based on cache
         let initialMessage = "Hello";
         try {
@@ -157,17 +177,31 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
             initialMessage,
             [],
             (assistantMessage: Message) => {
-              dispatch({
-                type: 'UPDATE_MESSAGE',
-                payload: {
-                  conversationId: localConversationId,
-                  messageId: assistantMessageId,
-                  content: assistantMessage.content,
-                  choices: assistantMessage.choices,
-                  acts: assistantMessage.acts,
-                  dailyUpdates: assistantMessage.dailyUpdates,
-                },
-              });
+              // Check if we've already added this message ID
+              const alreadyAdded = addedMessageIdsRef.current.has(assistantMessage.id);
+
+              if (!alreadyAdded) {
+                // First time seeing this message - ADD it
+                console.log('🔔 [ChatAgent] Adding new message:', assistantMessage.id);
+                addedMessageIdsRef.current.add(assistantMessage.id);
+                dispatch({
+                  type: 'ADD_MESSAGE',
+                  payload: { conversationId: localConversationId, message: assistantMessage },
+                });
+              } else {
+                // Message already added - UPDATE it
+                dispatch({
+                  type: 'UPDATE_MESSAGE',
+                  payload: {
+                    conversationId: localConversationId,
+                    messageId: assistantMessage.id,
+                    content: assistantMessage.content,
+                    choices: assistantMessage.choices,
+                    acts: assistantMessage.acts,
+                    dailyUpdates: assistantMessage.dailyUpdates,
+                  },
+                });
+              }
             },
             userEmail,
             state.currentSessionId,
@@ -187,7 +221,9 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
             },
             assistantMessageId,
             appId,
-            handleProviderSwitch
+            handleProviderSwitch,
+            userName,
+            userDesignation
           );
         } catch (e) {
           console.error("Welcome message failed", e);
@@ -372,24 +408,41 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
       payload: { conversationId: localConversationId!, message: initialAssistantMessage },
     });
 
+    // Track that this message has been added
+    addedMessageIdsRef.current.add(assistantMessageId);
+
     // Stream assistant response
     try {
       await streamMessage(
         content,
         files,
         (assistantMessage: Message) => {
-          if (assistantMessage.acts) console.log('🚀 [ChatAgent] Dispatching UPDATE_MESSAGE with acts:', assistantMessage.acts);
-          dispatch({
-            type: 'UPDATE_MESSAGE',
-            payload: {
-              conversationId: localConversationId!,
-              messageId: assistantMessageId,
-              content: assistantMessage.content,
-              choices: assistantMessage.choices,
-              acts: assistantMessage.acts,
-              dailyUpdates: assistantMessage.dailyUpdates,
-            },
-          });
+          // Check if this message ID is already tracked
+          const alreadyAdded = addedMessageIdsRef.current.has(assistantMessage.id);
+
+          if (!alreadyAdded) {
+            // New message (split) - ADD it
+            console.log('🔔 [ChatAgent] Adding split message:', assistantMessage.id);
+            addedMessageIdsRef.current.add(assistantMessage.id);
+            dispatch({
+              type: 'ADD_MESSAGE',
+              payload: { conversationId: localConversationId!, message: assistantMessage },
+            });
+          } else {
+            // Existing message - UPDATE it
+            if (assistantMessage.acts) console.log('🚀 [ChatAgent] Dispatching UPDATE_MESSAGE with acts:', assistantMessage.acts);
+            dispatch({
+              type: 'UPDATE_MESSAGE',
+              payload: {
+                conversationId: localConversationId!,
+                messageId: assistantMessage.id,
+                content: assistantMessage.content,
+                choices: assistantMessage.choices,
+                acts: assistantMessage.acts,
+                dailyUpdates: assistantMessage.dailyUpdates,
+              },
+            });
+          }
         },
         userEmail,
         backendSessionId,
@@ -409,7 +462,9 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         },
         assistantMessageId,
         appId,
-        handleProviderSwitch
+        handleProviderSwitch,
+        userName,
+        userDesignation
       );
     } catch (err) {
       console.error('Error streaming message:', err);
@@ -496,6 +551,9 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
       payload: { conversationId: localConversationId!, message: initialAssistantMessage },
     });
 
+    // Track that this message has been added
+    addedMessageIdsRef.current.add(assistantMessageId);
+
     if (isAIAssistantChoice) {
       console.log('AI Assistant choice detected, switching provider to openai');
       // Switch provider immediately
@@ -510,18 +568,32 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         value, // Send the VALUE to Botpress, not the title
         [],
         (assistantMessage: Message) => {
-          if (assistantMessage.acts) console.log('🚀 [ChatAgent] Dispatching UPDATE_MESSAGE with acts:', assistantMessage.acts);
-          dispatch({
-            type: 'UPDATE_MESSAGE',
-            payload: {
-              conversationId: localConversationId!,
-              messageId: assistantMessageId,
-              content: assistantMessage.content,
-              choices: assistantMessage.choices,
-              acts: assistantMessage.acts,
-              dailyUpdates: assistantMessage.dailyUpdates,
-            },
-          });
+          // Check if this message ID is already tracked
+          const alreadyAdded = addedMessageIdsRef.current.has(assistantMessage.id);
+
+          if (!alreadyAdded) {
+            // New message (split) - ADD it
+            console.log('🔔 [ChatAgent] Adding split message:', assistantMessage.id);
+            addedMessageIdsRef.current.add(assistantMessage.id);
+            dispatch({
+              type: 'ADD_MESSAGE',
+              payload: { conversationId: localConversationId!, message: assistantMessage },
+            });
+          } else {
+            // Existing message - UPDATE it
+            if (assistantMessage.acts) console.log('🚀 [ChatAgent] Dispatching UPDATE_MESSAGE with acts:', assistantMessage.acts);
+            dispatch({
+              type: 'UPDATE_MESSAGE',
+              payload: {
+                conversationId: localConversationId!,
+                messageId: assistantMessage.id,
+                content: assistantMessage.content,
+                choices: assistantMessage.choices,
+                acts: assistantMessage.acts,
+                dailyUpdates: assistantMessage.dailyUpdates,
+              },
+            });
+          }
         },
         userEmail,
         backendSessionId,
@@ -541,7 +613,9 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         },
         assistantMessageId,
         appId,
-        handleProviderSwitch
+        handleProviderSwitch,
+        userName,
+        userDesignation
       );
     } catch (err) {
       console.error('Error streaming message:', err);

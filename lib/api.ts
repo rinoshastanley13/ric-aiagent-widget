@@ -22,7 +22,9 @@ export class ChatAPI {
     isNewChat: boolean = false,
     apiKey: string,
     provider: string = 'botpress',
-    appId?: string
+    appId?: string,
+    userName?: string,
+    userDesignation?: string
   ): Promise<void> {
     try {
       const payload = {
@@ -32,7 +34,9 @@ export class ChatAPI {
         thread_id: !threadId || threadId === 'new' ? 'new' : threadId,
         is_new_chat: isNewChat,
         provider: provider,
-        app_id: appId
+        app_id: appId,
+        user_name: userName,
+        user_designation: userDesignation
       };
 
       const response = await fetch(`${API_BASE_URL}/chat`, {

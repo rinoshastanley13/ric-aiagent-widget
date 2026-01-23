@@ -6,6 +6,7 @@ export const useChatStream = () => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const currentMessageRef = useRef<Message | null>(null);
+  const needsAddRef = useRef<boolean>(false); // Track if message needs to be added first
 
   const streamMessage = useCallback(async (
     userMessage: string,
@@ -20,7 +21,9 @@ export const useChatStream = () => {
     onIdsUpdate?: (sessionId: string, threadId: string) => void,
     messageId?: string,
     appId?: string,
-    onProviderSwitch?: (newProvider: string) => void
+    onProviderSwitch?: (newProvider: string) => void,
+    userName?: string,
+    userDesignation?: string
   ) => {
     setIsStreaming(true);
     setError(null);
@@ -34,6 +37,7 @@ export const useChatStream = () => {
     };
 
     currentMessageRef.current = assistantMessage;
+    needsAddRef.current = false; // Initial message is already added by ChatAgent
     onMessageUpdate(assistantMessage);
 
     await ChatAPI.streamChatResponse(
@@ -59,9 +63,42 @@ export const useChatStream = () => {
 
                 if (parsed.response) {
                   const text = parsed.response;
-                  if (currentMessageRef.current) {
-                    currentMessageRef.current.content += text;
-                    shouldUpdate = true;
+
+                  // Check if the response contains the __NEXT_MESSAGE__ marker
+                  if (text.includes('__NEXT_MESSAGE__')) {
+                    console.log('🔔 [useChatStream] DETECTED __NEXT_MESSAGE__ MARKER!', text);
+
+                    // Split on the marker to separate messages
+                    const parts = text.split('__NEXT_MESSAGE__');
+                    const contentBeforeMarker = parts[0];
+                    const contentAfterMarker = parts[1] || '';
+
+                    // Add content before marker to current message if any
+                    if (contentBeforeMarker && currentMessageRef.current) {
+                      currentMessageRef.current.content += contentBeforeMarker;
+                      // Force update the completed first message
+                      onMessageUpdate({ ...currentMessageRef.current });
+                    }
+
+                    // Create a new message for the next response
+                    const newMessage: Message = {
+                      id: (Date.now() + Math.random()).toString(),
+                      content: contentAfterMarker, // Start with content after marker if any
+                      role: 'assistant',
+                      timestamp: new Date(),
+                    };
+
+                    currentMessageRef.current = newMessage;
+                    needsAddRef.current = true; // Flag that this message needs to be added
+                    console.log('🔔 [useChatStream] Created new message object:', newMessage.id);
+                    // Don't call onMessageUpdate yet - wait for next chunk to add it
+                    shouldUpdate = false; // We'll handle it on next chunk
+                  } else {
+                    // Normal content append
+                    if (currentMessageRef.current) {
+                      currentMessageRef.current.content += text;
+                      shouldUpdate = true;
+                    }
                   }
                 }
 
@@ -93,6 +130,11 @@ export const useChatStream = () => {
 
                 // Only call onMessageUpdate once per chunk after processing everything
                 if (shouldUpdate && currentMessageRef.current) {
+                  // If this message needs to be added first (new message after marker)
+                  if (needsAddRef.current) {
+                    console.log('🔔 [useChatStream] Adding new message to conversation:', currentMessageRef.current.id);
+                    needsAddRef.current = false; // Clear flag after adding
+                  }
                   onMessageUpdate({ ...currentMessageRef.current });
                 }
 
@@ -139,7 +181,9 @@ export const useChatStream = () => {
       isNewChat,
       apiKey,
       provider,
-      appId
+      appId,
+      userName,
+      userDesignation
     );
   }, []);
 

@@ -178,6 +178,7 @@
                 app_id: id,
                 user_name: myScript.getAttribute('data-name'),
                 user_email: myScript.getAttribute('data-email'),
+                user_designation: myScript.getAttribute('data-designation'),
                 tenantId: myScript.getAttribute('data-tenant-id'),
                 company: myScript.getAttribute('data-company-name')
             };

@@ -8,6 +8,7 @@ export type WidgetContext = {
     app_unique_key?: string;
     tenantId?: string;
     company?: string;
+    user_designation?: string;
 };
 
 export function useWidgetBridge() {
