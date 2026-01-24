@@ -28,6 +28,55 @@ interface MessageBubbleProps {
 }
 
 
+// Shadow DOM Component
+const ShadowDOMRenderer = ({ html }: { html: string }) => {
+  const shadowHostRef = useRef<HTMLDivElement>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useLayoutEffect(() => {
+    if (shadowHostRef.current && !shadowHostRef.current.shadowRoot) {
+      const shadowRoot = shadowHostRef.current.attachShadow({ mode: 'open' });
+
+      // Add basic styles for better appearance
+      const style = document.createElement('style');
+      style.textContent = `
+        :host {
+          display: block;
+          width: 100%;
+          min-height: 200px;
+        }
+        body, html {
+          margin: 0;
+          padding: 0;
+          font-family: system-ui, sans-serif;
+          height: 100%;
+        }
+        * {
+          box-sizing: border-box;
+        }
+      `;
+
+      shadowRoot.appendChild(style);
+
+      // Create a container for the content
+      const container = document.createElement('div');
+      container.innerHTML = html;
+      shadowRoot.appendChild(container);
+
+      // Mark as loaded to trigger any animations/transitions
+      setTimeout(() => setIsLoaded(true), 50);
+    }
+  }, [html]);
+
+  return (
+    <div
+      ref={shadowHostRef}
+      className={`w-full min-h-[200px] transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
+    />
+  );
+};
+
 const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
   message,
   isStreaming = false,
@@ -44,174 +93,8 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [showStatesSelector, setShowStatesSelector] = useState(false);
 
-  // Check if this message should show the lead form
-  useEffect(() => {
-    const shouldShowForm =
-      message.leadFormTrigger ||
-      message.content.toLowerCase().includes('ric_leadgenform') ||
-      message.content.toLowerCase().includes('lead gen form');
-
-    setShowLeadForm(shouldShowForm);
-  }, [message.content, message.leadFormTrigger]);
-
-  // Check if this message should show the states selector
-  useEffect(() => {
-    const shouldShowStates = message.content.toLowerCase().includes('ric_states');
-    setShowStatesSelector(shouldShowStates);
-  }, [message.content]);
-
-  // Check if message contains ONLY technical triggers (no other content)
-  const shouldHideMessageContent = () => {
-    const content = message.content.toLowerCase();
-    const technicalTriggers = [
-      'ric_leadgenform',
-      'lead gen form',
-      'switch_provider',
-      '__end_switch',
-      '__end_switch',
-      'ric_states',
-      'ric_email_validation',
-      'ric_form_submited',
-      'ric_form_skipped'
-    ];
-
-    // Strip all triggers to see if there's any content left
-    let contentWithoutTriggers = content;
-    technicalTriggers.forEach(trigger => {
-      contentWithoutTriggers = contentWithoutTriggers.replace(new RegExp(trigger, 'gi'), '');
-    });
-
-    // Only hide if there's no meaningful content left after removing triggers
-    return contentWithoutTriggers.trim().length === 0;
-  };
-
-  // Prevent rendering empty, pure-trigger user messages (like RIC_FORM_SUBMITED)
-  if (isUser && shouldHideMessageContent() && (!message.files || message.files.length === 0)) {
-    return null;
-  }
-
-  const handleFeedback = (type: 'thumbsUp' | 'thumbsDown') => {
-    setFeedback(type);
-    // You can also send this feedback to your backend
-    console.log(`User gave ${type} feedback for message:`, message.id);
-  };
-
-  const handleLeadFormSubmit = (data: any) => {
-    console.log('Lead form submitted:', data);
-    setShowLeadForm(false);
-    if (onFormSubmit) {
-      onFormSubmit();
-    }
-  };
-
-  const handleLeadFormSkip = () => {
-    console.log('Lead form skipped');
-    setShowLeadForm(false);
-    if (onFormSkip) {
-      onFormSkip();
-    }
-  };
-
-  // Function to detect if content contains HTML
-  const containsHTML = (content: string) => {
-    //return /<[^>]*>/.test(content);
-
-    // Check for common HTML patterns
-    /*
-    const htmlPatterns = [
-      // Opening tags (with optional attributes)
-      /<([a-z][a-z0-9]*)\b[^>]*>/i,
-      // Closing tags
-      /<\/([a-z][a-z0-9]*)\b[^>]*>/i,
-      // Self-closing tags
-      /<([a-z][a-z0-9]*)\b[^>]*\/>/i,
-      // HTML comments
-      /<!--[\s\S]*?-->/,
-      // HTML entities (though these might appear in plain text too)
-      /&[a-z]+;/i,
-      // DOCTYPE declaration
-      /<!DOCTYPE\s+html/i
-    ];
-
-    // Check for any HTML pattern
-    return htmlPatterns.some(pattern => pattern.test(content));
-    */
-    return false;
-  };
-
-  // Shadow DOM Component
-  const ShadowDOMRenderer = ({ html }: { html: string }) => {
-    const shadowHostRef = useRef<HTMLDivElement>(null);
-    const [isLoaded, setIsLoaded] = useState(false);
-
-    useLayoutEffect(() => {
-      if (shadowHostRef.current && !shadowHostRef.current.shadowRoot) {
-        const shadowRoot = shadowHostRef.current.attachShadow({ mode: 'open' });
-
-        // Add basic styles for better appearance
-        const style = document.createElement('style');
-        style.textContent = `
-          :host {
-            display: block;
-            width: 100%;
-            min-height: 200px;
-          }
-          body, html {
-            margin: 0;
-            padding: 0;
-            font-family: system-ui, sans-serif;
-            height: 100%;
-          }
-          * {
-            box-sizing: border-box;
-          }
-        `;
-
-        shadowRoot.appendChild(style);
-
-        // Create a container for the content
-        const container = document.createElement('div');
-        container.innerHTML = html;
-        shadowRoot.appendChild(container);
-
-        // Mark as loaded to trigger any animations/transitions
-        setTimeout(() => setIsLoaded(true), 50);
-      }
-    }, [html]);
-
-    return (
-      <div
-        ref={shadowHostRef}
-        className={`w-full min-h-[200px] transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-      />
-    );
-  };
-
-  // Function to render HTML content safely
-  const renderHTMLContent = (content: string) => {
-    // Only verify HTML if explicitly allowed
-    if (allowHtml && containsHTML(content)) {
-      const sanitizedContent = DOMPurify.sanitize(content, {
-        ADD_TAGS: ['iframe', 'script'],
-        ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
-      });
-
-      return (
-        <div className="html-content-container my-4 p-4 border border-gray-300 rounded-lg bg-white">
-          <div className="text-xs text-gray-500 mb-2 font-medium">
-            HTML Content Preview
-          </div>
-          <div className="relative min-h-[200px]">
-            <ShadowDOMRenderer html={sanitizedContent} />
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
   // Custom components for ReactMarkdown with enhanced styling - Memoized to prevent re-renders
+  // MOVED HERE to avoid "Rendered fewer hooks than expected" error
   const MarkdownComponents = React.useMemo(() => ({
     // Code blocks with syntax highlighting
     code: ({ node, inline, className, children, ...props }: any) => {
@@ -270,11 +153,8 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
     ),
 
     // Tables with proper styling
-    // Tables with proper alignment and styling
-    // Enhanced tables with better styling
     table: ({ children }: any) => (
       <div className="table-container rounded-sm my-6 overflow-x-auto  border border-gray-200/80 shadow-lg bg-white/95 backdrop-blur-sm">
-
         <table className="markdown-table min-w-full ">
           {children}
         </table>
@@ -283,7 +163,6 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
 
     th: ({ children }: any) => (
       <th className="table-header px-4 py-3 text-left text-sm font-bold text-gray-800 uppercase tracking-wider border-b border-gray-300/60">
-
         {children}
       </th>
     ),
@@ -394,6 +273,119 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
       <hr className="my-6 border-gray-300" />
     ),
   }), [isUser]);
+
+  // Check if this message should show the lead form
+  useEffect(() => {
+    const shouldShowForm =
+      message.leadFormTrigger ||
+      message.content.toLowerCase().includes('ric_leadgenform') ||
+      message.content.toLowerCase().includes('lead gen form');
+
+    setShowLeadForm(shouldShowForm);
+  }, [message.content, message.leadFormTrigger]);
+
+  // Check if this message should show the states selector
+  useEffect(() => {
+    const shouldShowStates = message.content.toLowerCase().includes('ric_states');
+    setShowStatesSelector(shouldShowStates);
+  }, [message.content]);
+
+  // Check if message contains ONLY technical triggers (no other content)
+  const shouldHideMessageContent = () => {
+    const content = message.content.toLowerCase();
+    const technicalTriggers = [
+      'ric_leadgenform',
+      'lead gen form',
+      'switch_provider',
+      '__end_switch',
+      '__end_switch',
+      'ric_states',
+      'ric_email_validation',
+      'ric_form_submited',
+      'ric_form_skipped',
+      'ric_support_ticket'
+    ];
+
+    // Strip all triggers to see if there's any content left
+    let contentWithoutTriggers = content;
+    technicalTriggers.forEach(trigger => {
+      contentWithoutTriggers = contentWithoutTriggers.replace(new RegExp(trigger, 'gi'), '');
+    });
+
+    // Only hide if there's no meaningful content left after removing triggers
+    return contentWithoutTriggers.trim().length === 0;
+  };
+
+  // Prevent rendering empty, pure-trigger messages (User OR Assistant)
+  // Hide if:
+  // 1. Not currently streaming (loading state should show)
+  // 2. Content is empty after stripping triggers
+  // 3. No attachments/interactive elements (files, choices, acts, dailyUpdates, forms)
+  const shouldHideBubble =
+    !isStreaming &&
+    shouldHideMessageContent() &&
+    (!message.files || message.files.length === 0) &&
+    (!message.choices || message.choices.length === 0) &&
+    (!message.acts) &&
+    (!message.dailyUpdates) &&
+    !showLeadForm &&
+    !showStatesSelector;
+
+  if (shouldHideBubble) {
+    return null;
+  }
+
+  const handleFeedback = (type: 'thumbsUp' | 'thumbsDown') => {
+    setFeedback(type);
+    // You can also send this feedback to your backend
+    console.log(`User gave ${type} feedback for message:`, message.id);
+  };
+
+  const handleLeadFormSubmit = (data: any) => {
+    console.log('Lead form submitted:', data);
+    setShowLeadForm(false);
+    if (onFormSubmit) {
+      onFormSubmit();
+    }
+  };
+
+  const handleLeadFormSkip = () => {
+    console.log('Lead form skipped');
+    setShowLeadForm(false);
+    if (onFormSkip) {
+      onFormSkip();
+    }
+  };
+
+  // Function to detect if content contains HTML
+  const containsHTML = (content: string) => {
+    return false;
+  };
+
+  // Function to render HTML content safely
+  const renderHTMLContent = (content: string) => {
+    // Only verify HTML if explicitly allowed
+    if (allowHtml && containsHTML(content)) {
+      const sanitizedContent = DOMPurify.sanitize(content, {
+        ADD_TAGS: ['iframe', 'script'],
+        ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
+      });
+
+      return (
+        <div className="html-content-container my-4 p-4 border border-gray-300 rounded-lg bg-white">
+          <div className="text-xs text-gray-500 mb-2 font-medium">
+            HTML Content Preview
+          </div>
+          <div className="relative min-h-[200px]">
+            <ShadowDOMRenderer html={sanitizedContent} />
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -565,6 +557,7 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
     </div>
   );
 };
+
 // Wrap with React.memo to prevent unnecessary re-renders during streaming
 export const MessageBubble = React.memo(MessageBubbleComponent, (prevProps, nextProps) => {
   // Only re-render if message content, streaming status, or choices change

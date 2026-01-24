@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CMS Widget Embed Test</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f0f0;
+            padding: 2rem;
+        }
+
+        .content {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .info-box h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content">
+        <h1>CMS Widget Test Page</h1>
+        <p>This is a sample CMS page hosting the chatbot widget with user details.</p>
+        <p>The widget should appear in the bottom-right corner.</p>
+
+        <div class="info-box">
+            <h3>Current User Context</h3>
+            <ul>
+                <li><strong>Name:</strong> Sarah Johnson</li>
+                <li><strong>Email:</strong> sarah.johnson@acmecorp.com</li>
+                <li><strong>Designation:</strong> Senior Compliance Manager</li>
+                <li><strong>Bot Type:</strong> CMS Bot (ric-cms)</li>
+            </ul>
+        </div>
+
+        <h2>Instructions</h2>
+        <ol>
+            <li>Verify the widget loads.</li>
+            <li>Click the chat button to open the widget.</li>
+            <li>Send your first message - it will include user details automatically.</li>
+            <li>Check backend logs for: <code>DEBUG: CMS bot - prepending user name to message</code></li>
+        </ol>
+
+        <h2>Expected Behavior</h2>
+        <p><strong>First Message:</strong> When you send your first message (e.g., "Hello"), Botpress receives:</p>
+        <pre style="background: #263238; color: #aed581; padding: 1rem; border-radius: 4px; overflow-x: auto;">User Name: Sarah Johnson, Designation: Senior Compliance Manager
+
+Hello</pre>
+
+        <p><strong>Subsequent Messages:</strong> All following messages in the same thread are sent normally without
+            user details.</p>
+    </div>
+
+    <!-- 
+        CMS Bot with User Details
+        - Uses KeyCms and cms-tenant
+        - Includes user name, email, and designation
+        - First message will have user details prepended automatically
+    -->
+    <script>
+        (function () {
+            const s = document.createElement("script");
+            s.src = "http://localhost:4000/widget/widget-loader.js";
+
+            // CMS Bot Configuration
+            s.setAttribute("data-key", "KeyCms");
+            s.setAttribute("data-id", "cms-tenant");
+            s.setAttribute("data-host", "http://localhost:4000");
+
+            // User Details (NEW - for CMS bot)
+            s.setAttribute("data-name", "Sarah Johnson");
+            s.setAttribute("data-email", "sarah.johnson@acmecorp.com");
+            s.setAttribute("data-designation", "Senior Compliance Manager");
+
+            // Optional attributes
+            s.setAttribute("data-tenant-id", "acme-corp");
+            s.setAttribute("data-company-name", "ACME Corporation");
+
+            s.async = true;
+            document.body.appendChild(s);
+        })();
+    </script>
+
+</body>
+
+</html>
