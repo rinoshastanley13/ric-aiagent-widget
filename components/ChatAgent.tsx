@@ -183,8 +183,25 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         // Track that this message has been added
         addedMessageIdsRef.current.add(assistantMessageId);
 
-        // Determine initial message based on prop or fallback
-        let initialMessage = userName || "Hello";
+        let initialMessage = null;
+
+        // Check if userName and email exist in cache (ALWAYS CHECK)
+        try {
+          const storedUserStr = localStorage.getItem('widget_user');
+          if (storedUserStr) {
+            const storedUser = JSON.parse(storedUserStr);
+            if (storedUser.email && storedUser.name) {
+              initialMessage = "RIC-USER-CACHE";
+            }
+          }
+        } catch (e) {
+          console.error('[ChatAgent] Error parsing widget_user for trigger check:', e);
+        }
+
+        // Fallback to CMS userName or Default Hello
+        if (!initialMessage) {
+          initialMessage = userName || "Hello";
+        }
         console.log("Initial message set to:", initialMessage);
 
         // Stream welcome response
