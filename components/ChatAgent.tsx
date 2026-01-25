@@ -500,7 +500,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         },
       });
     }
-  }, [currentConversation, dispatch, streamMessage, state.currentSessionId, state.currentThreadId, state.user?.email, state.currentProvider, propProvider, handleProviderSwitch, isValidWidget, userMessageCount]);
+  }, [currentConversation, dispatch, streamMessage, state.currentSessionId, state.currentThreadId, state.user?.email, state.currentProvider, propProvider, handleProviderSwitch, isValidWidget, userMessageCount, isSupportTicketMode]);
 
   const handleChoiceSelect = useCallback(async (value: string, title: string, messageId: string) => {
     // Check if this is an AI Assistant choice
