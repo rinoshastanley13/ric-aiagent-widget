@@ -303,7 +303,8 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
       'ric_email_validation',
       'ric_form_submited',
       'ric_form_skipped',
-      'ric_support_ticket'
+      'ric_support_ticket',
+      'new_chat'
     ];
 
     // Strip all triggers to see if there's any content left
@@ -459,6 +460,7 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
                       .replace(/lead gen form/gi, '')
                       .replace(/ric_states/gi, '')
                       .replace(/RIC_EMAIL_VALIDATION/g, '')
+                      .replace(/NEW_CHAT/g, '')
                       .replace(/switch_provider/gi, '')
                       .replace(/__end_switch__/gi, '')
                       .trim();

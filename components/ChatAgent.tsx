@@ -14,9 +14,10 @@ interface ChatAgentProps {
   provider?: string; // Optional, defaults to context provider
   userName?: string;
   userDesignation?: string;
+  onNewChat?: () => void;
 }
 
-export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: propProvider, userName, userDesignation }) => {
+export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: propProvider, userName, userDesignation, onNewChat }) => {
   const { state, dispatch } = useChat();
   const { streamMessage, isStreaming, error } = useChatStream();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -114,6 +115,19 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
     }
   }, [currentConversation?.messages]);
 
+  // Check for New Chat Trigger
+  useEffect(() => {
+    if (!currentConversation?.messages) return;
+    const lastMessage = currentConversation.messages[currentConversation.messages.length - 1];
+
+    if (lastMessage && lastMessage.role === 'assistant' && lastMessage.content.includes('NEW_CHAT')) {
+      console.log('[ChatAgent] Triggered New Chat Mode');
+      if (onNewChat) {
+        onNewChat();
+      }
+    }
+  }, [currentConversation?.messages, onNewChat]);
+
   // Use a ref to track previous conversation ID to avoid clearing mid-stream
   const prevConversationIdRef = useRef<string | null>(null);
 
@@ -183,8 +197,25 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
         // Track that this message has been added
         addedMessageIdsRef.current.add(assistantMessageId);
 
-        // Determine initial message based on prop or fallback
-        let initialMessage = userName || "Hello";
+        let initialMessage = null;
+
+        // Check if userName and email exist in cache (ALWAYS CHECK)
+        try {
+          const storedUserStr = localStorage.getItem('widget_user');
+          if (storedUserStr) {
+            const storedUser = JSON.parse(storedUserStr);
+            if (storedUser.email && storedUser.name) {
+              initialMessage = "RIC-USER-CACHE";
+            }
+          }
+        } catch (e) {
+          console.error('[ChatAgent] Error parsing widget_user for trigger check:', e);
+        }
+
+        // Fallback to CMS userName or Default Hello
+        if (!initialMessage) {
+          initialMessage = userName || "Hello";
+        }
         console.log("Initial message set to:", initialMessage);
 
         // Stream welcome response
@@ -256,10 +287,23 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
 
 
   const handleSendMessage = useCallback(async (content: string, files: FileAttachment[] = [], overrideProvider?: string) => {
+    console.log('[ChatAgent] handleSendMessage called with content:', JSON.stringify(content));
     if (!content.trim()) return;
 
     // Clear previous errors
     setInputError(null);
+
+    // Check for Manual New Chat Trigger (User Typed)
+    if (content.trim().toUpperCase() === 'NEW_CHAT') {
+      console.log('[ChatAgent] User manually triggered New Chat');
+      if (onNewChat) {
+        onNewChat();
+        return;
+      } else {
+        console.warn('[ChatAgent] onNewChat prop is missing, cannot reset chat.');
+        return; // Stop execution anyway
+      }
+    }
 
     // 1. Resolve Identity IMMEDIATELY (Before any cache updates)
     // We lock in the current user email to ensure we send the message as the current user (e.g. Guest),
@@ -503,6 +547,18 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
   }, [currentConversation, dispatch, streamMessage, state.currentSessionId, state.currentThreadId, state.user?.email, state.currentProvider, propProvider, handleProviderSwitch, isValidWidget, userMessageCount, isSupportTicketMode]);
 
   const handleChoiceSelect = useCallback(async (value: string, title: string, messageId: string) => {
+    // Check for Manual New Chat Trigger (Choice Clicked)
+    if (value.trim().toUpperCase() === 'NEW_CHAT') {
+      console.log('[ChatAgent] User selected New Chat choice');
+      if (onNewChat) {
+        onNewChat();
+        return;
+      } else {
+        console.warn('[ChatAgent] onNewChat prop is missing (in choice select), cannot reset chat.');
+        return;
+      }
+    }
+
     // Check if this is an AI Assistant choice
     const isAIAssistantChoice = ['AI_ASSISTANT', 'ASK_AI', 'ASK_RICA', 'TALK_AI'].includes(
       value.toUpperCase()
