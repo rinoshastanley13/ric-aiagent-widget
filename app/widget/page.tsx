@@ -181,6 +181,7 @@ function WidgetContent() {
                                     appId={context?.app_id || ''}
                                     userName={context?.user_name}
                                     userDesignation={context?.user_designation}
+                                    onNewChat={handleNewChat}
                                 />
                             </div>
                         </ChatProvider>
