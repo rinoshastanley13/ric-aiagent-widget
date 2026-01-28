@@ -68,13 +68,21 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
 
   // Memoize scrollToBottom to prevent recreating on every render
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Use requestAnimationFrame to ensure DOM has updated
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    });
+
+    // Backup: slight delay for dynamic content (like images/charts loading)
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 100);
   }, []);
 
   // Separate effects to prevent infinite loops
   useEffect(() => {
     scrollToBottom();
-  }, [currentConversation?.messages, scrollToBottom]); // Only scroll when messages change
+  }, [currentConversation?.messages, isStreaming, scrollToBottom]); // Scroll when messages change OR streaming happens
 
   // Check for Email Validation Trigger in latest assistant message
   useEffect(() => {
@@ -753,6 +761,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
                 key={message.id || index}
                 message={message}
                 isStreaming={isStreaming && message.role === 'assistant' && index === currentConversation.messages.length - 1}
+                isLastMessage={index === currentConversation.messages.length - 1}
                 onChoiceSelect={(value: string, title: string) => handleChoiceSelect(value, title, message.id)}
                 onFormSubmit={() => handleSendMessage('RIC_FORM_SUBMITED')}
                 onFormSkip={() => handleSendMessage('RIC_FORM_SKIPPED')}
@@ -771,16 +780,34 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
           borderRadius: '0px'
         }}
       >
-        <ChatInput
-          onSendMessage={handleSendMessage}
-          disabled={isStreaming}
-          inputValue={inputValue}
-          onInputChange={(val) => {
-            setInputValue(val);
-            if (inputError) setInputError(null);
-          }}
-          errorMessage={inputError}
-        />
+        {(() => {
+          // Logic to disable input if the LAST message is from assistant AND (has choices OR is a state selector)
+          let shouldDisableInput = false;
+          if (currentConversation?.messages && currentConversation.messages.length > 0) {
+            const lastMsg = currentConversation.messages[currentConversation.messages.length - 1];
+            const isAssistant = lastMsg.role === 'assistant';
+            const hasChoices = lastMsg.choices && lastMsg.choices.length > 0;
+            const isStatesSelector = lastMsg.content.toLowerCase().includes('ric_states');
+
+            if (isAssistant && (hasChoices || isStatesSelector)) {
+              shouldDisableInput = true;
+            }
+          }
+
+          return (
+            <ChatInput
+              onSendMessage={handleSendMessage}
+              disabled={isStreaming || shouldDisableInput}
+              inputValue={inputValue}
+              onInputChange={(val) => {
+                setInputValue(val);
+                if (inputError) setInputError(null);
+              }}
+              errorMessage={inputError}
+              disabledPlaceholder={shouldDisableInput ? "Please select an option" : undefined}
+            />
+          );
+        })()}
       </div>
     </div >
   );
