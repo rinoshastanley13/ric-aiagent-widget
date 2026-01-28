@@ -68,13 +68,21 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
 
   // Memoize scrollToBottom to prevent recreating on every render
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Use requestAnimationFrame to ensure DOM has updated
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    });
+
+    // Backup: slight delay for dynamic content (like images/charts loading)
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 100);
   }, []);
 
   // Separate effects to prevent infinite loops
   useEffect(() => {
     scrollToBottom();
-  }, [currentConversation?.messages, scrollToBottom]); // Only scroll when messages change
+  }, [currentConversation?.messages, isStreaming, scrollToBottom]); // Scroll when messages change OR streaming happens
 
   // Check for Email Validation Trigger in latest assistant message
   useEffect(() => {
