@@ -56,11 +56,17 @@ export const LeadGenForm: React.FC<LeadGenFormProps> = ({ onSubmit, onSkip }) =>
                 const widgetUserData = localStorage.getItem('widget_user');
                 if (widgetUserData) {
                     const user = JSON.parse(widgetUserData);
-                    setFormData((prev) => ({
-                        ...prev,
-                        contact_person_name: user.name || '',
-                        email: user.email || '',
-                    }));
+
+                    // Check if it's a guest user (either by flag or naming convention)
+                    const isGuest = user.isGuest || user.name === 'Guest' || user.email?.toLowerCase().startsWith('guest_');
+
+                    if (!isGuest) {
+                        setFormData((prev) => ({
+                            ...prev,
+                            contact_person_name: user.name || '',
+                            email: user.email || '',
+                        }));
+                    }
                 }
             } catch (error) {
                 console.error('Error loading cached form data:', error);

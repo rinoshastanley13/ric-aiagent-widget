@@ -20,6 +20,7 @@ import { StatesSelector } from './StatesSelector';
 interface MessageBubbleProps {
   message: Message;
   isStreaming?: boolean;
+  isLastMessage?: boolean; // Added isLastMessage prop
   feedback?: 'thumbsUp' | 'thumbsDown' | null;
   onChoiceSelect?: (value: string, title: string) => void;
   onFormSubmit?: () => void;
@@ -80,12 +81,14 @@ const ShadowDOMRenderer = ({ html }: { html: string }) => {
 const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
   message,
   isStreaming = false,
+  isLastMessage = false, // Default to false
   onChoiceSelect,
   onFormSubmit,
   onFormSkip,
   allowHtml = false
 }) => {
   if (message.acts) console.log('🚀 [MessageBubble] Rendering acts for message:', message.id, message.acts);
+
   const isUser = message.role === 'user';
 
   // Add state for feedback in your component
@@ -499,6 +502,7 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
             <ChoiceButtons
               choices={message.choices!}
               onSelect={onChoiceSelect}
+              disabled={!isLastMessage}
             />
           )}
 
@@ -506,6 +510,7 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
           {!isUser && showStatesSelector && onChoiceSelect && (
             <StatesSelector
               onSelect={(state) => onChoiceSelect(state, state)}
+              disabled={!isLastMessage}
             />
           )}
 
@@ -562,10 +567,11 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
 
 // Wrap with React.memo to prevent unnecessary re-renders during streaming
 export const MessageBubble = React.memo(MessageBubbleComponent, (prevProps, nextProps) => {
-  // Only re-render if message content, streaming status, or choices change
+  // Only re-render if message content, streaming status, choices, or isLastMessage change
   return (
     prevProps.message.content === nextProps.message.content &&
     prevProps.isStreaming === nextProps.isStreaming &&
+    prevProps.isLastMessage === nextProps.isLastMessage && // Added check
     JSON.stringify(prevProps.message.choices) === JSON.stringify(nextProps.message.choices)
   );
 });

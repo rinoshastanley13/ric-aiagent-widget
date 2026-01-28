@@ -753,6 +753,7 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
                 key={message.id || index}
                 message={message}
                 isStreaming={isStreaming && message.role === 'assistant' && index === currentConversation.messages.length - 1}
+                isLastMessage={index === currentConversation.messages.length - 1}
                 onChoiceSelect={(value: string, title: string) => handleChoiceSelect(value, title, message.id)}
                 onFormSubmit={() => handleSendMessage('RIC_FORM_SUBMITED')}
                 onFormSkip={() => handleSendMessage('RIC_FORM_SKIPPED')}
@@ -771,16 +772,34 @@ export const ChatAgent: React.FC<ChatAgentProps> = ({ apiKey, appId, provider: p
           borderRadius: '0px'
         }}
       >
-        <ChatInput
-          onSendMessage={handleSendMessage}
-          disabled={isStreaming}
-          inputValue={inputValue}
-          onInputChange={(val) => {
-            setInputValue(val);
-            if (inputError) setInputError(null);
-          }}
-          errorMessage={inputError}
-        />
+        {(() => {
+          // Logic to disable input if the LAST message is from assistant AND (has choices OR is a state selector)
+          let shouldDisableInput = false;
+          if (currentConversation?.messages && currentConversation.messages.length > 0) {
+            const lastMsg = currentConversation.messages[currentConversation.messages.length - 1];
+            const isAssistant = lastMsg.role === 'assistant';
+            const hasChoices = lastMsg.choices && lastMsg.choices.length > 0;
+            const isStatesSelector = lastMsg.content.toLowerCase().includes('ric_states');
+
+            if (isAssistant && (hasChoices || isStatesSelector)) {
+              shouldDisableInput = true;
+            }
+          }
+
+          return (
+            <ChatInput
+              onSendMessage={handleSendMessage}
+              disabled={isStreaming || shouldDisableInput}
+              inputValue={inputValue}
+              onInputChange={(val) => {
+                setInputValue(val);
+                if (inputError) setInputError(null);
+              }}
+              errorMessage={inputError}
+              disabledPlaceholder={shouldDisableInput ? "Please select an option" : undefined}
+            />
+          );
+        })()}
       </div>
     </div >
   );
