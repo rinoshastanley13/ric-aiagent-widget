@@ -12,6 +12,7 @@ interface ChatInputProps {
   inputValue?: string;
   onInputChange?: (value: string) => void;
   errorMessage?: string | null;
+  disabledPlaceholder?: string; // Added optional prop for custom disabled text
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -19,7 +20,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   disabled = false,
   inputValue,
   onInputChange,
-  errorMessage
+  errorMessage,
+  disabledPlaceholder
 }) => {
   const [message, setMessage] = useState(inputValue || '');
   const [files, setFiles] = useState<FileAttachment[]>([]);
@@ -162,7 +164,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               value={message}
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
-              placeholder={disabled ? "AI is thinking.." : "Ask your query"}
+              placeholder={disabled ? (disabledPlaceholder || "AI is thinking..") : "Ask your query"}
               disabled={disabled}
               rows={1}
               className="flex-1 resize-none bg-transparent outline-none disabled:cursor-not-allowed"
@@ -176,8 +178,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               }}
             />
 
-            {/* Progress spinner when processing */}
-            {disabled && (
+            {/* Progress spinner when processing - Only show if NO custom placeholder is set (implies default AI thinking state) */}
+            {disabled && !disabledPlaceholder && (
               <div className="flex-shrink-0">
                 <div className="border-2 border-blue-500 border-t-transparent rounded-full w-5 h-5 animate-spin"></div>
               </div>
